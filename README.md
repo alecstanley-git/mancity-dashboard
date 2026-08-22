@@ -34,10 +34,14 @@ and never enters this repository.
 | `src/components/` | shared chrome: header, live/idle bars, tab bar, badges, empty states |
 | `src/model/` | the view model. Turns a Worker payload into exactly what components render |
 | `src/lib/api.js` | Worker client and polling |
+| `src/lib/calendar.js` | builds the downloadable `.ics` for a fixture or a whole season |
+| `src/components/Portrait.jsx` | player headshot with a fallback chain to the placeholder |
 | `src/hooks/` | navigation/history, tooltip and toast layers |
 | `src/styles/tokens.css` | both colour themes, the interaction layer, the mobile override layer |
 | `worker/src/` | the Cloudflare Worker |
 | `worker/src/providers/` | one file per data provider — swap providers by adding one here |
+| `worker/src/join.js` | reconciles one player across providers, on date of birth |
+| `worker/src/derive.js` | caches the small shapes built from a large payload |
 | `design/` | the original Claude Design export, kept for reference. Nothing depends on it |
 | `design-spec.md` | the design contract. Read before changing layout, colour or data shapes |
 
@@ -134,6 +138,7 @@ Delete `.env.local` to point the local site back at the deployed Worker.
 | `GET /api/bootstrap` | everything the dashboard needs, in one response |
 | `GET /api/live` | only the match in play, for fast polling |
 | `GET /api/club?id=<teamId>` | one club's identity and recent results, when a club page opens |
+| `GET /api/player?id=<fplId>` | one player's match-by-match season, when a player page opens |
 | `GET /api/health` | token/KV presence, season, request budget |
 
 `/api/bootstrap` includes a `sources` object saying whether each card came from `upstream`,

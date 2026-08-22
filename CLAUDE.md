@@ -195,7 +195,7 @@ are not sold at any tier. That is why the cups come from ESPN.
 - **Player portraits need two sources and a client-side fallback.** The Premier League's CDN
   answers **403**, not 404, for players it has no photo of (Rulli, Donnarumma), and ESPN has
   no headshot for others (Bettinelli). Only one City player has both. A CSS `background-image`
-  cannot detect either failure and renders a blank card, so `components/Portrait.jsx` uses an
+  cannot detect either failure and renders a blank card, so `src/components/Portrait.jsx` uses an
   `<img>` with `onError` and falls through PL → ESPN → striped placeholder.
 - **`fpl.isError` must accept two payload shapes.** The bootstrap has `elements`, but
   `/element-summary` has `history`. Checking only for `elements` marks every player-form
@@ -238,6 +238,13 @@ The other three providers need no credential at all.
 
 Everything in the original brief is done, plus the four-provider layer that closed most of the
 "Failed to fetch" panels (injuries, transfers, shirt numbers, cups, capacity, xG, rival squads).
+All of it is deployed and verified live: the Worker's `/api/health` reports every provider, and
+`/api/bootstrap` from the production edge returns all four with no failed source.
+
+Also working, having previously been decorative: the **Add to calendar** button (downloads a
+real `.ics` with a 30-minute alarm — it used to do nothing but show a toast saying it had), the
+**fixture competition filter** (was hardcoded `null`), and **player portraits** on the squad
+and player pages.
 
 The 2026/27 season is one match old, so a lot of real data is legitimately zero or empty:
 
