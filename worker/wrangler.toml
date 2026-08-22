@@ -10,14 +10,12 @@ account_id = "a89d321ea82e3061ee6ce6d92998b808"
 # quota. It is only enforced when the KV binding below exists.
 DAILY_BUDGET = "400"
 
-# Optional. Without it the Worker still caches via the Cloudflare Cache API;
-# with it, it also keeps a day counter and a last-known-good copy of each
-# response to serve if upstream goes down. Create and bind with:
-#   npx wrangler kv namespace create HUB_KV --config worker/wrangler.toml
-# then uncomment and paste the id:
-# [[kv_namespaces]]
-# binding = "HUB_KV"
-# id = "PASTE_ID_HERE"
+# Holds the day counter for the upstream request budget, plus a last-known-good
+# copy of each response so the site degrades to stale-but-real if upstream goes
+# down. The Worker treats this as optional and runs without it.
+[[kv_namespaces]]
+binding = "HUB_KV"
+id = "c16b12e769f94c7b8d7dd295512d3a6b"
 
 # Secrets (never in this file):
 #   npx wrangler secret put FOOTBALL_DATA_TOKEN --config worker/wrangler.toml

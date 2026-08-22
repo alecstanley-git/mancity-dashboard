@@ -32,7 +32,7 @@ jobs:
         # The Worker URL is public (it holds no secrets -- the API token lives
         # in the Worker itself), so it is a plain variable, not a secret.
         env:
-          VITE_WORKER_URL: ${{ vars.VITE_WORKER_URL || 'https://mancity-hub-api.alecstanley.workers.dev' }}
+          VITE_WORKER_URL: ${{ vars.VITE_WORKER_URL || 'https://mancity-hub-api.stanleyalec283.workers.dev' }}
         run: npm run build
 
       - uses: actions/configure-pages@v5

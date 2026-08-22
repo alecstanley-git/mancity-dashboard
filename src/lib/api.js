@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 // Set at build time. Falls back to the deployed Worker so a plain `vite build`
 // with no env still produces a working site.
 export const WORKER_URL = (
-  import.meta.env.VITE_WORKER_URL || 'https://mancity-hub-api.alecstanley.workers.dev'
+  import.meta.env.VITE_WORKER_URL || 'https://mancity-hub-api.stanleyalec283.workers.dev'
 ).replace(/\/$/, '');
 
 // Poll cadences, in ms. The Worker caps upstream calls independently -- these
