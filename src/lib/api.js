@@ -11,6 +11,13 @@ export const WORKER_URL = (
 const IDLE_MS = 10 * 60 * 1000; // no match in play
 const LIVE_MS = 60 * 1000; // a match is in play
 
+// How long either side of kickoff to watch for a live match. Waiting for the
+// 10-minute bootstrap to notice kickoff would leave the live bar up to ten
+// minutes late; a match window costs one request a minute and only while a
+// match could plausibly be on.
+const PRE_KICKOFF_MS = 5 * 60 * 1000;
+const MATCH_LENGTH_MS = 165 * 60 * 1000;
+
 async function get(path, signal) {
   const res = await fetch(`${WORKER_URL}${path}`, { signal });
   if (!res.ok) throw new Error(`${path} -> HTTP ${res.status}`);
@@ -65,8 +72,13 @@ export function useFeed() {
     };
   }, [tick]);
 
-  // Fast loop, only while a match is actually in play.
-  const isLive = !!(feed && feed.live);
+  // Fast loop: while a match is in play, and through the window around the next
+  // kickoff so the live bar appears on time rather than at the next bootstrap.
+  const nextKickoff = feed && feed.timeline ? nextKickoffFrom(feed.timeline) : null;
+  const inMatchWindow =
+    nextKickoff != null && Date.now() > nextKickoff - PRE_KICKOFF_MS && Date.now() < nextKickoff + MATCH_LENGTH_MS;
+  const isLive = !!(feed && feed.live) || inMatchWindow;
+
   useEffect(() => {
     if (!isLive) return undefined;
     const ac = new AbortController();
@@ -89,6 +101,18 @@ export function useFeed() {
   }, [isLive]);
 
   return { feed, status, error, refresh: () => setTick((n) => n + 1) };
+}
+
+/** Kickoff of the soonest fixture that has not already finished. */
+function nextKickoffFrom(timeline) {
+  const now = Date.now();
+  let best = null;
+  for (const row of timeline) {
+    if (row.score) continue;
+    if (row.ts + MATCH_LENGTH_MS < now) continue;
+    if (best == null || row.ts < best) best = row.ts;
+  }
+  return best;
 }
 
 /**

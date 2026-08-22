@@ -8,13 +8,17 @@ Live at **[mancity.alecstanley.com](https://mancity.alecstanley.com)**.
 ## Architecture
 
 ```
-  Browser                     Cloudflare Worker                Upstream
-  ─────────                   ─────────────────                ────────
-  GitHub Pages                mancity-hub-api                  football-data.org  (API token)
-  static React app  ────────► holds the API token     ───────► BBC Sport RSS      (no key)
-  no keys in bundle           caches + rate-limits             Guardian RSS       (no key)
-                              normalises shapes
+  Browser                          Cloudflare Worker              Upstream
+  ─────────                        ─────────────────              ────────
+  mancity.alecstanley.com          mancity-hub-api                football-data.org (token)
+  GitHub Pages, static React  ───► holds the API token       ───► BBC Sport RSS     (no key)
+  no keys in the bundle            caches + rate-limits            Guardian RSS     (no key)
+                                   normalises shapes
 ```
+
+- Site: <https://mancity.alecstanley.com>
+- Worker: <https://mancity-hub-api.stanleyalec283.workers.dev>
+- Repo: <https://github.com/alecstanley-git/mancity-dashboard>
 
 GitHub Pages serves static files only, so the frontend cannot hold an API token. The Worker
 holds it as a secret, calls upstream on the site's behalf, caches the answers, and returns
@@ -139,16 +143,18 @@ The Cloudflare API token needs these permissions:
 
 Watch it live with `npm run worker:tail`.
 
-### Enabling KV
+### KV
 
-Optional; the Worker runs without it.
+Already created and bound (`HUB_KV`, namespace `c16b12e769f94c7b8d7dd295512d3a6b`). The
+Worker treats it as optional, so if the binding is ever removed the site keeps working with
+Cache-API caching alone. To recreate it from scratch:
 
 ```bash
 npx wrangler kv namespace create HUB_KV --config worker/wrangler.toml
 ```
 
-Uncomment the `[[kv_namespaces]]` block in `worker/wrangler.toml`, paste in the id it prints,
-and redeploy.
+then paste the id it prints into the `[[kv_namespaces]]` block in `worker/wrangler.toml` and
+redeploy.
 
 ---
 
