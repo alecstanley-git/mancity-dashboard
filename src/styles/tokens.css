@@ -1,0 +1,136 @@
+  :root{
+    --bg:#EDF2F8; --panel:#FFFFFF; --panel2:#F4F8FC; --line:#DCE6F1;
+    --ink:#101A38; --dim:#5D6E90; --sky:#6CABDD; --skyText:#2B7AB8;
+    --navy:#1C2C5B; --gold:#D4A12A; --red:#EC3325; --chip:#E9F2FA;
+    --heroBg:#1C2C5B; --heroInk:#FFFFFF; --heroDim:#A9C4E4; --heroLine:rgba(108,171,221,.30);
+    --shadow:0 1px 2px rgba(16,26,56,.06), 0 10px 28px rgba(16,26,56,.07);
+    --stripe:rgba(28,44,91,.07); --stripeBg:#E5EDF6;
+    --shadowUp:0 2px 4px rgba(16,26,56,.07), 0 16px 34px rgba(16,26,56,.13);
+  }
+  [data-theme="dark"]{
+    --bg:#070D22; --panel:#0F1A3C; --panel2:#142149; --line:rgba(108,171,221,.16);
+    --ink:#E9F1FA; --dim:#8AA2C6; --sky:#6CABDD; --skyText:#8CC3EC;
+    --navy:#1C2C5B; --gold:#FFC659; --red:#EC3325; --chip:#17265A;
+    --heroBg:#12224D; --heroInk:#FFFFFF; --heroDim:#9DB8DC; --heroLine:rgba(108,171,221,.22);
+    --shadow:0 1px 0 rgba(255,255,255,.04), 0 20px 44px rgba(0,0,0,.45);
+    --stripe:rgba(108,171,221,.10); --stripeBg:#101C40;
+    --shadowUp:0 1px 0 rgba(255,255,255,.05), 0 26px 54px rgba(0,0,0,.55);
+  }
+  [data-theme="dark"]{ --chip:#17265A; }
+  html,body{margin:0;padding:0;background:var(--bg);}
+  *{box-sizing:border-box;}
+  a{color:var(--skyText);text-decoration:none;}
+  @media (hover:hover){a:hover{color:var(--sky);}}
+  @keyframes cityPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+  @keyframes cityRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+  button{transition:background .14s ease,color .14s ease,border-color .14s ease,transform .1s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  button:active{transform:translateY(1px) scale(.99);}
+  :focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
+  [data-tip],[data-toast]{cursor:pointer;}
+
+  /* Hover states carried over from the export's `style-hover` attributes. An
+     inline style cannot express :hover, so each distinct hover rule became a
+     `data-hov` role, styled here alongside the rest of the interaction layer. */
+  @media (hover:hover){
+    [data-hov="link"]:hover{color:var(--skyText);}
+    [data-hov="sky"]:hover{color:var(--sky);}
+    [data-hov="nav"]:hover{color:var(--ink);border-color:var(--sky);}
+    [data-hov="btn"]:hover{background:#8CC3EC;}
+  }
+  [data-card]{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;}
+  @media (hover:hover){[data-card]:hover{transform:translateY(-2px);border-color:var(--sky);box-shadow:var(--shadowUp);}}
+  [data-card]:active{transform:translateY(0) scale(.995);border-color:var(--sky);}
+  [data-row]{transition:background .12s ease;}
+  @media (hover:hover){[data-row]:hover{background:var(--panel2);}}
+  [data-row]:active{background:var(--panel2);}
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+  /* Tile rows that must size to their CARD, not the viewport: four 9.5px letterspaced
+     labels only fit across a wide card. The section is the query container. */
+  @container (max-width:400px){
+    [data-m="facts"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  }
+  @container (max-width:620px){
+    [data-m="stats"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  }
+
+  /* ---------- mobile / touch layer (<=860px). Every rule is scoped to a data-m role,
+       so the desktop cascade above is untouched and both themes inherit unchanged. ---------- */
+  @media (max-width:860px){
+    [data-m="root"]{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
+    [data-m="page"]{padding-left:16px!important;padding-right:16px!important}
+    [data-m="grid"]{padding-left:16px!important;padding-right:16px!important;display:flex!important;flex-direction:column!important;gap:14px!important}
+    [data-m="grid"]>*{grid-column:auto!important;width:100%!important;min-width:0!important;margin-top:0!important}
+    /* the two profile columns flatten into the stack and adopt its rhythm */
+    [data-m="col-side"],[data-m="col-main"]{gap:14px!important}
+    [data-m="stack"]{padding-left:16px!important;padding-right:16px!important;gap:18px!important}
+    [data-m="hide"]{display:none!important}
+    [data-m="card"]{padding:18px!important}
+    [data-m="tap"]{min-height:44px!important;height:auto!important;padding:0 16px!important}
+    [data-m="chiprow"]{width:100%!important;margin-left:0!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+    [data-m="chiprow"]>*{flex:none!important;min-height:44px!important;display:flex!important;align-items:center!important;white-space:nowrap}
+    [data-m="scrollx"]{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+    [data-m="scrollx"]>*{flex:none!important;white-space:nowrap}
+
+    [data-m="live"]{height:auto!important;min-height:56px!important;gap:14px!important;padding:8px 0}
+    [data-m="livelab"]{width:auto!important}
+    [data-m="livescore"]{width:auto!important;flex:1 1 auto!important;min-width:0!important;justify-content:flex-end!important}
+    [data-m="idle"]{height:auto!important;min-height:48px!important;flex-wrap:wrap!important;gap:10px!important;padding:11px 0}
+    [data-m="head"]{height:64px!important;gap:12px!important}
+    [data-m="crest"]{width:38px!important;height:38px!important}
+    [data-m="tog"]>button{width:44px!important;height:38px!important}
+
+    [data-m="hero"]{padding:20px 18px 22px!important;gap:20px!important}
+    [data-m="hero-teams"]{flex-wrap:wrap!important;gap:14px!important}
+    [data-m="hero-teams"]>div:first-child,[data-m="hero-teams"]>div:nth-child(3){width:auto!important;flex:1 1 92px!important}
+    [data-m="hero-kick"]{margin-left:0!important;align-items:flex-start!important;width:100%!important;gap:6px!important;border-top:1px solid var(--heroLine);padding-top:16px}
+    [data-m="kick"]{font-size:34px!important}
+    [data-m="cd-wrap"]{flex-direction:column!important;align-items:stretch!important;gap:18px!important}
+    [data-m="cd-row"]{gap:8px!important}
+    [data-m="cd"]{width:auto!important;flex:1 1 0!important;min-width:0!important}
+    [data-m="cd-act"]{margin-left:0!important}
+    [data-m="cd-act"]>button{flex:1 1 auto!important;width:100%!important;height:48px!important}
+
+    [data-m="table"]{grid-template-columns:30px minmax(0,1fr) 38px 84px!important;gap:5px!important}
+    [data-m="table"]>button{font-size:13px!important}
+    [data-m="table"]>span:last-child{gap:3px!important}
+    [data-m="table"]>span:last-child>span{width:14px!important;height:14px!important;border-radius:4px!important;font-size:9px!important}
+    [data-m="num"]{display:none!important}
+    [data-m="path"]{flex-wrap:wrap!important;gap:8px 12px!important;padding:14px!important}
+    [data-m="five"]{grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:140px!important;overflow-x:auto!important;padding-bottom:4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+    [data-m="five"]>*{scroll-snap-align:start}
+
+    [data-m="cards1"]{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+    [data-m="cards2"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+    [data-m="title"]{font-size:32px!important}
+    [data-m="statbig"]{font-size:34px!important}
+    [data-m="shirt"]{font-size:68px!important}
+    [data-m="pname"]{font-size:30px!important}
+    [data-m="cname"]{font-size:26px!important}
+
+    [data-m="mohead"]{padding:14px 16px!important}
+    [data-m="mopad"]{padding:4px 16px 12px!important}
+    [data-m="fx"]{grid-template-columns:42px minmax(0,1fr) auto!important;grid-template-areas:"d d c" "b o s"!important;gap:8px 12px!important;padding:14px 8px!important;margin:0 -8px!important}
+    [data-m="fx-d"]{grid-area:d}
+    [data-m="fx-c"]{grid-area:c;text-align:right}
+    [data-m="fx-b"]{grid-area:b}
+    [data-m="fx-o"]{grid-area:o}
+    [data-m="fx-s"]{grid-area:s;font-size:22px!important}
+    [data-m="fx-v"]{display:none!important}
+
+    [data-m="pc"]{grid-template-columns:minmax(0,1fr) 46px 46px 56px!important;gap:6px!important}
+    [data-m="pc-min"]{display:none!important}
+    [data-m="l5"]{gap:8px!important}
+    [data-m="backrow"]{flex-wrap:wrap!important;gap:10px!important}
+    [data-m="foot"]{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
+    [data-m="foot"]>*{margin-left:0!important}
+    [data-m="tabbar"]{display:block!important}
+    /* the toast stack and tooltip are DOM nodes built in installUI(), so they carry
+       data-m roles too — full-width above the tab bar rather than pinned right */
+    [data-m="toasts"]{left:16px!important;right:16px!important;bottom:calc(78px + env(safe-area-inset-bottom))!important;gap:10px!important}
+    [data-m="toasts"]>div{max-width:none!important;width:100%!important}
+    [data-m="tip"]{max-width:calc(100vw - 24px)!important}
+  }
+  @media (min-width:561px) and (max-width:860px){
+    [data-m="cards1"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  }

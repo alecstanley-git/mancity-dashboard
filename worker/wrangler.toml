@@ -1,0 +1,23 @@
+name = "mancity-hub-api"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+workers_dev = true
+account_id = "a89d321ea82e3061ee6ce6d92998b808"
+
+[vars]
+# Upstream calls allowed per UTC day. football-data.org limits by the minute
+# rather than the day, so this is a backstop against a runaway loop, not a
+# quota. It is only enforced when the KV binding below exists.
+DAILY_BUDGET = "400"
+
+# Optional. Without it the Worker still caches via the Cloudflare Cache API;
+# with it, it also keeps a day counter and a last-known-good copy of each
+# response to serve if upstream goes down. Create and bind with:
+#   npx wrangler kv namespace create HUB_KV --config worker/wrangler.toml
+# then uncomment and paste the id:
+# [[kv_namespaces]]
+# binding = "HUB_KV"
+# id = "PASTE_ID_HERE"
+
+# Secrets (never in this file):
+#   npx wrangler secret put FOOTBALL_DATA_TOKEN --config worker/wrangler.toml

@@ -1,0 +1,29 @@
+{
+  "name": "city-hub",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "A personal Manchester City dashboard — fixtures, live scores, tables, squad and news.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "worker:dev": "wrangler dev --config worker/wrangler.toml",
+    "worker:deploy": "wrangler deploy --config worker/wrangler.toml",
+    "worker:tail": "wrangler tail --config worker/wrangler.toml"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.3.4",
+    "vite": "^5.4.11",
+    "wrangler": "^3.99.0"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "esbuild@0.17.19": true,
+    "workerd@1.20250718.0": true
+  }
+}
