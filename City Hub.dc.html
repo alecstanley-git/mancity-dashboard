@@ -1,0 +1,1800 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDF2F8; --panel:#FFFFFF; --panel2:#F4F8FC; --line:#DCE6F1;
+    --ink:#101A38; --dim:#5D6E90; --sky:#6CABDD; --skyText:#2B7AB8;
+    --navy:#1C2C5B; --gold:#D4A12A; --red:#EC3325; --chip:#E9F2FA;
+    --heroBg:#1C2C5B; --heroInk:#FFFFFF; --heroDim:#A9C4E4; --heroLine:rgba(108,171,221,.30);
+    --shadow:0 1px 2px rgba(16,26,56,.06), 0 10px 28px rgba(16,26,56,.07);
+    --stripe:rgba(28,44,91,.07); --stripeBg:#E5EDF6;
+    --shadowUp:0 2px 4px rgba(16,26,56,.07), 0 16px 34px rgba(16,26,56,.13);
+  }
+  [data-theme="dark"]{
+    --bg:#070D22; --panel:#0F1A3C; --panel2:#142149; --line:rgba(108,171,221,.16);
+    --ink:#E9F1FA; --dim:#8AA2C6; --sky:#6CABDD; --skyText:#8CC3EC;
+    --navy:#1C2C5B; --gold:#FFC659; --red:#EC3325; --chip:#17265A;
+    --heroBg:#12224D; --heroInk:#FFFFFF; --heroDim:#9DB8DC; --heroLine:rgba(108,171,221,.22);
+    --shadow:0 1px 0 rgba(255,255,255,.04), 0 20px 44px rgba(0,0,0,.45);
+    --stripe:rgba(108,171,221,.10); --stripeBg:#101C40;
+    --shadowUp:0 1px 0 rgba(255,255,255,.05), 0 26px 54px rgba(0,0,0,.55);
+  }
+  [data-theme="dark"]{ --chip:#17265A; }
+  html,body{margin:0;padding:0;background:var(--bg);}
+  *{box-sizing:border-box;}
+  a{color:var(--skyText);text-decoration:none;}
+  @media (hover:hover){a:hover{color:var(--sky);}}
+  @keyframes cityPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.82)}}
+  @keyframes cityRise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  @keyframes toastIn{from{opacity:0;transform:translateX(16px)}to{opacity:1;transform:none}}
+  button{transition:background .14s ease,color .14s ease,border-color .14s ease,transform .1s ease;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  button:active{transform:translateY(1px) scale(.99);}
+  :focus-visible{outline:2px solid var(--sky);outline-offset:2px;}
+  [data-tip],[data-toast]{cursor:pointer;}
+  [data-card]{transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;}
+  @media (hover:hover){[data-card]:hover{transform:translateY(-2px);border-color:var(--sky);box-shadow:var(--shadowUp);}}
+  [data-card]:active{transform:translateY(0) scale(.995);border-color:var(--sky);}
+  [data-row]{transition:background .12s ease;}
+  @media (hover:hover){[data-row]:hover{background:var(--panel2);}}
+  [data-row]:active{background:var(--panel2);}
+  @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+  /* Tile rows that must size to their CARD, not the viewport: four 9.5px letterspaced
+     labels only fit across a wide card. The section is the query container. */
+  @container (max-width:400px){
+    [data-m="facts"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+  }
+  @container (max-width:620px){
+    [data-m="stats"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  }
+
+  /* ---------- mobile / touch layer (<=860px). Every rule is scoped to a data-m role,
+       so the desktop cascade above is untouched and both themes inherit unchanged. ---------- */
+  @media (max-width:860px){
+    [data-m="root"]{padding-bottom:calc(88px + env(safe-area-inset-bottom))!important}
+    [data-m="page"]{padding-left:16px!important;padding-right:16px!important}
+    [data-m="grid"]{padding-left:16px!important;padding-right:16px!important;display:flex!important;flex-direction:column!important;gap:14px!important}
+    [data-m="grid"]>*{grid-column:auto!important;width:100%!important;min-width:0!important;margin-top:0!important}
+    /* the two profile columns flatten into the stack and adopt its rhythm */
+    [data-m="col-side"],[data-m="col-main"]{gap:14px!important}
+    [data-m="stack"]{padding-left:16px!important;padding-right:16px!important;gap:18px!important}
+    [data-m="hide"]{display:none!important}
+    [data-m="card"]{padding:18px!important}
+    [data-m="tap"]{min-height:44px!important;height:auto!important;padding:0 16px!important}
+    [data-m="chiprow"]{width:100%!important;margin-left:0!important;flex-wrap:nowrap!important;overflow-x:auto!important;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+    [data-m="chiprow"]>*{flex:none!important;min-height:44px!important;display:flex!important;align-items:center!important;white-space:nowrap}
+    [data-m="scrollx"]{flex-wrap:nowrap!important;overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+    [data-m="scrollx"]>*{flex:none!important;white-space:nowrap}
+
+    [data-m="live"]{height:auto!important;min-height:56px!important;gap:14px!important;padding:8px 0}
+    [data-m="livelab"]{width:auto!important}
+    [data-m="livescore"]{width:auto!important;flex:1 1 auto!important;min-width:0!important;justify-content:flex-end!important}
+    [data-m="idle"]{height:auto!important;min-height:48px!important;flex-wrap:wrap!important;gap:10px!important;padding:11px 0}
+    [data-m="head"]{height:64px!important;gap:12px!important}
+    [data-m="crest"]{width:38px!important;height:38px!important}
+    [data-m="tog"]>button{width:44px!important;height:38px!important}
+
+    [data-m="hero"]{padding:20px 18px 22px!important;gap:20px!important}
+    [data-m="hero-teams"]{flex-wrap:wrap!important;gap:14px!important}
+    [data-m="hero-teams"]>div:first-child,[data-m="hero-teams"]>div:nth-child(3){width:auto!important;flex:1 1 92px!important}
+    [data-m="hero-kick"]{margin-left:0!important;align-items:flex-start!important;width:100%!important;gap:6px!important;border-top:1px solid var(--heroLine);padding-top:16px}
+    [data-m="kick"]{font-size:34px!important}
+    [data-m="cd-wrap"]{flex-direction:column!important;align-items:stretch!important;gap:18px!important}
+    [data-m="cd-row"]{gap:8px!important}
+    [data-m="cd"]{width:auto!important;flex:1 1 0!important;min-width:0!important}
+    [data-m="cd-act"]{margin-left:0!important}
+    [data-m="cd-act"]>button{flex:1 1 auto!important;width:100%!important;height:48px!important}
+
+    [data-m="table"]{grid-template-columns:30px minmax(0,1fr) 38px 84px!important;gap:5px!important}
+    [data-m="table"]>button{font-size:13px!important}
+    [data-m="table"]>span:last-child{gap:3px!important}
+    [data-m="table"]>span:last-child>span{width:14px!important;height:14px!important;border-radius:4px!important;font-size:9px!important}
+    [data-m="num"]{display:none!important}
+    [data-m="path"]{flex-wrap:wrap!important;gap:8px 12px!important;padding:14px!important}
+    [data-m="five"]{grid-template-columns:none!important;grid-auto-flow:column!important;grid-auto-columns:140px!important;overflow-x:auto!important;padding-bottom:4px;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch}
+    [data-m="five"]>*{scroll-snap-align:start}
+
+    [data-m="cards1"]{grid-template-columns:minmax(0,1fr)!important;gap:14px!important}
+    [data-m="cards2"]{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px!important}
+    [data-m="title"]{font-size:32px!important}
+    [data-m="statbig"]{font-size:34px!important}
+    [data-m="shirt"]{font-size:68px!important}
+    [data-m="pname"]{font-size:30px!important}
+    [data-m="cname"]{font-size:26px!important}
+
+    [data-m="mohead"]{padding:14px 16px!important}
+    [data-m="mopad"]{padding:4px 16px 12px!important}
+    [data-m="fx"]{grid-template-columns:42px minmax(0,1fr) auto!important;grid-template-areas:"d d c" "b o s"!important;gap:8px 12px!important;padding:14px 8px!important;margin:0 -8px!important}
+    [data-m="fx-d"]{grid-area:d}
+    [data-m="fx-c"]{grid-area:c;text-align:right}
+    [data-m="fx-b"]{grid-area:b}
+    [data-m="fx-o"]{grid-area:o}
+    [data-m="fx-s"]{grid-area:s;font-size:22px!important}
+    [data-m="fx-v"]{display:none!important}
+
+    [data-m="pc"]{grid-template-columns:minmax(0,1fr) 46px 46px 56px!important;gap:6px!important}
+    [data-m="pc-min"]{display:none!important}
+    [data-m="l5"]{gap:8px!important}
+    [data-m="backrow"]{flex-wrap:wrap!important;gap:10px!important}
+    [data-m="foot"]{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
+    [data-m="foot"]>*{margin-left:0!important}
+    [data-m="tabbar"]{display:block!important}
+    /* the toast stack and tooltip are DOM nodes built in installUI(), so they carry
+       data-m roles too — full-width above the tab bar rather than pinned right */
+    [data-m="toasts"]{left:16px!important;right:16px!important;bottom:calc(78px + env(safe-area-inset-bottom))!important;gap:10px!important}
+    [data-m="toasts"]>div{max-width:none!important;width:100%!important}
+    [data-m="tip"]{max-width:calc(100vw - 24px)!important}
+  }
+  @media (min-width:561px) and (max-width:860px){
+    [data-m="cards1"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  }
+</style>
+</helmet>
+
+<div data-m="root" data-theme="{{ theme }}" style="background:var(--bg);color:var(--ink);font-family:Archivo,Helvetica,sans-serif;min-height:100vh;padding-bottom:72px;-webkit-font-smoothing:antialiased">
+
+  <sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+    <div data-m="page" style="background:var(--red);color:#fff;padding:0 32px">
+      <div data-m="live" style="max-width:1440px;margin:0 auto;height:56px;display:flex;align-items:center;gap:24px">
+        <span data-m="livelab" style="display:flex;align-items:center;gap:9px;width:74px;flex:none">
+          <span style="width:9px;height:9px;border-radius:50%;background:#fff;animation:cityPulse 1.4s ease-in-out infinite"></span>
+          <span style="font-size:12px;font-weight:800;letter-spacing:.18em;line-height:1">LIVE</span>
+        </span>
+        <span data-m="livescore" style="display:flex;align-items:center;gap:12px;width:262px;flex:none;font-family:'Barlow Condensed',Archivo,sans-serif;line-height:1">
+          <button onClick="{{ live.openMci }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;color:#fff;font-family:'Barlow Condensed',Archivo,sans-serif;width:48px;text-align:right;font-size:22px;font-weight:600;letter-spacing:.04em">MCI</button>
+          <span style="width:76px;text-align:center;font-size:28px;font-weight:700">{{ live.score }}</span>
+          <button onClick="{{ live.openOpp }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;color:#fff;font-family:'Barlow Condensed',Archivo,sans-serif;width:48px;font-size:22px;font-weight:600;letter-spacing:.04em">{{ live.oppCode }}</button>
+          <span data-tip="Match clock" style="margin-left:auto;display:flex;align-items:center;justify-content:center;height:26px;min-width:44px;padding:0 8px;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;border:1px solid rgba(255,255,255,.5);border-radius:6px">{{ live.minute }}</span>
+        </span>
+        <span data-m="hide" style="width:1px;height:24px;background:rgba(255,255,255,.34);flex:none"></span>
+        <span data-m="hide" style="display:flex;align-items:center;gap:20px;overflow:hidden;flex:1;min-width:0">
+          <sc-for list="{{ live.scorers }}" as="s" hint-placeholder-count="3">
+            <button onClick="{{ s.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;display:flex;align-items:center;color:#fff;font-size:12.5px;font-weight:600;line-height:1;white-space:nowrap;opacity:.95;cursor:{{ s.cursor }}">{{ s.text }}</button>
+          </sc-for>
+        </span>
+        <span data-m="hide" data-tip="Live from the Etihad" style="display:flex;align-items:center;font-size:11px;font-weight:700;letter-spacing:.16em;line-height:1;opacity:.85;flex:none">{{ live.comp }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ isUpcoming }}" hint-placeholder-val="{{ true }}">
+    <div data-m="page" style="background:var(--panel2);border-bottom:1px solid var(--line);padding:0 32px">
+      <div data-m="idle" style="max-width:1440px;margin:0 auto;height:48px;display:flex;align-items:center;gap:22px;color:var(--dim);font-size:12px;font-weight:600;letter-spacing:.03em">
+        <span style="display:flex;align-items:center;gap:8px;line-height:1;color:var(--skyText)">
+          <span style="width:7px;height:7px;border-radius:50%;background:var(--sky)"></span>
+          NO MATCH TODAY
+        </span>
+        <span data-m="hide" style="width:1px;height:16px;background:var(--line)"></span>
+        <span style="line-height:1">Next up · {{ next.tickerLine }}</span>
+        <span data-m="hide" style="margin-left:auto;line-height:1;letter-spacing:.14em;font-size:11px;font-weight:700">{{ dateLabel }}</span>
+      </div>
+    </div>
+  </sc-if>
+
+  <header data-m="page" style="padding:0 32px">
+    <div data-m="head" style="max-width:1440px;margin:0 auto;height:88px;display:flex;align-items:center;gap:18px">
+      <img data-m="crest" src="crest.svg" alt="Manchester City" width="46" height="46" style="display:block;flex:none">
+      <div style="display:flex;flex-direction:column;gap:2px">
+        <span style="font-size:19px;font-weight:800;letter-spacing:-.01em">CITY HUB</span>
+        <span style="font-size:11.5px;font-weight:600;letter-spacing:.12em;color:var(--dim)">{{ greeting }}</span>
+      </div>
+      <nav data-m="hide" style="display:flex;gap:26px;margin-left:44px">
+        <sc-for list="{{ nav }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.select }}" style="background:none;border:0;padding:0 0 3px;cursor:pointer;font-family:Archivo,sans-serif;font-size:13px;font-weight:{{ t.weight }};color:{{ t.fg }};border-bottom:2px solid {{ t.bd }}">{{ t.label }}</button>
+        </sc-for>
+      </nav>
+      <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+        <div data-m="tog" style="display:flex;padding:3px;background:var(--panel2);border:1px solid var(--line);border-radius:999px">
+          <button onClick="{{ setLight }}" aria-label="Light mode" data-tip="Switch to light mode" style="border:0;cursor:pointer;width:34px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:{{ ui.lightBg }};color:{{ ui.lightFg }}">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="4.2"></circle>
+              <line x1="12" y1="2.4" x2="12" y2="4.6"></line>
+              <line x1="12" y1="19.4" x2="12" y2="21.6"></line>
+              <line x1="2.4" y1="12" x2="4.6" y2="12"></line>
+              <line x1="19.4" y1="12" x2="21.6" y2="12"></line>
+              <line x1="5.2" y1="5.2" x2="6.8" y2="6.8"></line>
+              <line x1="17.2" y1="17.2" x2="18.8" y2="18.8"></line>
+              <line x1="18.8" y1="5.2" x2="17.2" y2="6.8"></line>
+              <line x1="6.8" y1="17.2" x2="5.2" y2="18.8"></line>
+            </svg>
+          </button>
+          <button onClick="{{ setDark }}" aria-label="Dark mode" data-tip="Switch to dark mode" style="border:0;cursor:pointer;width:34px;height:30px;display:flex;align-items:center;justify-content:center;border-radius:999px;background:{{ ui.darkBg }};color:{{ ui.darkFg }}">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="currentColor">
+              <path d="M20.2 14.9A8.6 8.6 0 0 1 9.1 3.8a7.7 7.7 0 1 0 11.1 11.1z"></path>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <sc-if value="{{ isOverview }}" hint-placeholder-val="{{ true }}">
+  <main data-m="grid" style="max-width:1440px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(12,1fr);gap:20px;align-items:start">
+
+    <section style="grid-column:span 8;background:var(--heroBg);color:var(--heroInk);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);position:relative">
+      <div style="position:absolute;inset:0;background:repeating-linear-gradient(115deg,rgba(108,171,221,.10) 0 1px,transparent 1px 26px);pointer-events:none"></div>
+      <div data-m="hero" style="position:relative;padding:26px 32px 30px;display:flex;flex-direction:column;gap:26px">
+
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.18em;color:var(--navy);background:var(--sky);padding:5px 10px;border-radius:4px">{{ next.comp }}</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--heroDim)">{{ next.round }}</span>
+          <span style="margin-left:auto;font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--heroDim)">MATCH CENTRE</span>
+        </div>
+
+        <div data-m="hero-teams" style="display:flex;align-items:center;gap:34px">
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:120px">
+            <img src="crest.svg" alt="Manchester City" width="84" height="84" style="display:block">
+            <button onClick="{{ next.openSelf }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;color:var(--heroInk);font-size:12.5px;font-weight:700;letter-spacing:.04em" style-hover="color:var(--sky)">Man City</button>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:6px;flex:none">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:600;color:var(--heroDim);letter-spacing:.06em">VS</span>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:center;gap:12px;width:120px">
+            <div style="width:76px;height:76px;border-radius:50%;background:{{ next.oppBg }};border:4px solid rgba(255,255,255,.55);display:flex;align-items:center;justify-content:center">
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;color:{{ next.oppFg }}">{{ next.oppCode }}</span>
+            </div>
+            <button onClick="{{ next.openOpp }}" data-tip="Open club page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;color:var(--heroInk);font-size:12.5px;font-weight:700;letter-spacing:.04em" style-hover="color:var(--sky)">{{ next.opponent }}</button>
+          </div>
+
+          <div data-m="hero-kick" style="margin-left:auto;display:flex;flex-direction:column;gap:10px;align-items:flex-end">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--heroDim)">KICKOFF · AEST</span>
+            <span data-m="kick" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:.9;letter-spacing:.01em">{{ next.kickTime }}</span>
+            <span style="font-size:13px;font-weight:600;color:var(--heroDim)">{{ next.kickDate }}</span>
+            <span style="font-size:12px;font-weight:600;color:var(--heroDim)">{{ next.venue }} · {{ next.broadcast }}</span>
+          </div>
+        </div>
+
+        <div data-m="cd-wrap" style="display:flex;align-items:flex-end;gap:22px;border-top:1px solid var(--heroLine);padding-top:22px">
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <span style="font-size:11px;font-weight:700;letter-spacing:.16em;color:var(--heroDim)">COUNTDOWN TO KICKOFF</span>
+            <div data-m="cd-row" style="display:flex;gap:10px">
+              <div data-m="cd" style="width:74px;padding:10px 0;background:rgba(255,255,255,.08);border:1px solid var(--heroLine);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:1">{{ cd.d }}</span>
+                <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--heroDim)">DAYS</span>
+              </div>
+              <div data-m="cd" style="width:74px;padding:10px 0;background:rgba(255,255,255,.08);border:1px solid var(--heroLine);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:1">{{ cd.h }}</span>
+                <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--heroDim)">HRS</span>
+              </div>
+              <div data-m="cd" style="width:74px;padding:10px 0;background:rgba(255,255,255,.08);border:1px solid var(--heroLine);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:1">{{ cd.m }}</span>
+                <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;color:var(--heroDim)">MIN</span>
+              </div>
+              <div data-m="cd" style="width:74px;padding:10px 0;background:var(--gold);border-radius:10px;display:flex;flex-direction:column;align-items:center;gap:2px">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:1;color:#1C2C5B">{{ cd.s }}</span>
+                <span style="font-size:9.5px;font-weight:700;letter-spacing:.14em;color:rgba(28,44,91,.7)">SEC</span>
+              </div>
+            </div>
+          </div>
+          <div data-m="cd-act" style="margin-left:auto;display:flex;gap:10px">
+            <button data-toast="Added to calendar — reminder 30 min before kickoff" data-toast-tone="gold" style="border:0;cursor:pointer;font-family:Archivo,sans-serif;font-size:12.5px;font-weight:700;letter-spacing:.04em;height:44px;padding:0 20px;border-radius:8px;background:var(--sky);color:#0E1A38" style-hover="background:#8CC3EC">Add to calendar</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column:span 4;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px 24px 8px;display:flex;flex-direction:column" data-m="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">FIXTURE RAIL</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">NEXT 4</span>
+      </div>
+      <sc-for list="{{ fixtures }}" as="f" hint-placeholder-count="4">
+        <div data-row data-tip="Kickoff shown in AEST" style="display:flex;align-items:center;gap:14px;padding:13px 10px;margin:0 -10px;border-radius:8px;border-bottom:1px solid var(--line)">
+          <div style="width:38px;height:38px;border-radius:50%;background:{{ f.bg }};display:flex;align-items:center;justify-content:center;flex:none">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700;color:{{ f.fg }}">{{ f.code }}</span>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:3px;min-width:0">
+            <button onClick="{{ f.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:13.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:var(--skyText)">{{ f.opponent }}</button>
+            <span style="font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--dim)">{{ f.comp }} · {{ f.venue }}</span>
+          </div>
+          <div style="margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;letter-spacing:.02em">{{ f.time }}</span>
+            <span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;color:var(--dim)">{{ f.date }}</span>
+          </div>
+        </div>
+      </sc-for>
+      <div style="padding:14px 0 12px;text-align:center">
+        <span data-toast="Jumped to the full fixture list" style="font-size:12px;font-weight:700;color:var(--skyText);cursor:pointer">Full fixture list →</span>
+      </div>
+    </section>
+
+    <section style="grid-column:span 7;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">STANDINGS</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">{{ comp.updated }}</span>
+      </div>
+      <div data-m="chiprow" style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap">
+        <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4">
+          <button onClick="{{ t.select }}" style="cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;padding:9px 14px;border-radius:8px;background:{{ t.bg }};color:{{ t.fg }};border:1px solid {{ t.bd }}">{{ t.label }}</button>
+        </sc-for>
+      </div>
+
+      <sc-if value="{{ comp.isTable }}" hint-placeholder-val="{{ true }}">
+        <div>
+          <div data-m="table" style="display:grid;grid-template-columns:44px minmax(0,1fr) 40px 46px 46px 118px;gap:8px;padding:0 10px 10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">
+            <span>#</span><span>CLUB</span><span data-m="num" style="text-align:center">P</span><span data-m="num" style="text-align:center">GD</span><span style="text-align:center">PTS</span><span style="text-align:right">FORM</span>
+          </div>
+          <sc-for list="{{ comp.rows }}" as="r" hint-placeholder-count="6">
+            <div data-row data-m="table" style="display:grid;grid-template-columns:44px minmax(0,1fr) 40px 46px 46px 118px;gap:8px;align-items:center;padding:9px 10px;border-radius:8px;background:{{ r.rowBg }}">
+              <span style="display:flex;align-items:center;gap:9px">
+                <span data-tip="{{ r.zoneTip }}" style="width:3px;height:18px;border-radius:2px;background:{{ r.mark }}"></span>
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:{{ r.rankFg }}">{{ r.pos }}</span>
+              </span>
+              <button onClick="{{ r.open }}" data-tip="Open club page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:13.5px;font-weight:{{ r.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:var(--skyText)">{{ r.club }}</button>
+              <span data-m="num" style="text-align:center;font-size:13px;font-weight:600;color:var(--dim)">{{ r.played }}</span>
+              <span data-m="num" style="text-align:center;font-size:13px;font-weight:600;color:var(--dim)">{{ r.gd }}</span>
+              <span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700">{{ r.pts }}</span>
+              <span style="display:flex;gap:5px;justify-content:flex-end">
+                <sc-for list="{{ r.form }}" as="d" hint-placeholder-count="5">
+                  <span data-tip="{{ d.tip }}" style="width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;line-height:1;background:{{ d.bg }};color:{{ d.fg }}">{{ d.ch }}</span>
+                </sc-for>
+              </span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ comp.isPath }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <sc-for list="{{ comp.path }}" as="p" hint-placeholder-count="3">
+            <div data-row data-m="path" style="display:flex;align-items:center;gap:16px;padding:14px 16px;border-radius:10px;background:var(--panel2);border:1px solid var(--line)">
+              <span style="font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--dim);width:86px;flex:none">{{ p.round }}</span>
+              <button onClick="{{ p.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:14px;font-weight:700" style-hover="color:var(--skyText)">{{ p.opponent }}</button>
+              <span style="font-size:11.5px;font-weight:700;letter-spacing:.08em;color:var(--dim)">{{ p.venue }}</span>
+              <span style="margin-left:auto;font-size:12px;font-weight:800;letter-spacing:.06em;padding:6px 11px;border-radius:6px;background:{{ p.bg }};color:{{ p.fg }}">{{ p.result }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+      <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line)">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:14px">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--dim)">CITY · LAST FIVE IN {{ comp.shortLabel }}</span>
+          <span data-toast="Loading every result from this season" style="font-size:11px;font-weight:700;color:var(--skyText);cursor:pointer">All results →</span>
+        </div>
+        <div data-m="five" style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px">
+          <sc-for list="{{ comp.recent }}" as="g" hint-placeholder-count="5">
+            <div data-row style="min-width:0;padding:12px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:8px">
+              <span style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--dim)">{{ g.date }} · {{ g.venue }}</span>
+              <button onClick="{{ g.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:var(--skyText)">{{ g.opponent }}</button>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1;color:{{ g.fg }}">{{ g.score }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column:span 5;display:flex;flex-direction:column;gap:20px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">TOP SCORERS</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">ALL COMPS</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ scorers }}" as="p" hint-placeholder-count="4">
+            <div style="display:flex;align-items:center;gap:14px">
+              <div style="width:34px;height:34px;border-radius:50%;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none">
+                <span style="font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--skyText)">{{ p.num }}</span>
+              </div>
+              <div style="flex:1;display:flex;flex-direction:column;gap:6px;min-width:0">
+                <div style="display:flex;align-items:center;gap:8px">
+                  <button onClick="{{ p.open }}" data-tip="Open player page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;font-size:13.5px;font-weight:700;color:var(--ink);text-align:left">{{ p.name }}</button>
+                  <span style="font-size:11px;font-weight:600;color:var(--dim)">{{ p.pos }}</span>
+                  <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;color:var(--skyText)">{{ p.goals }}</span>
+                </div>
+                <div style="height:5px;border-radius:3px;background:var(--panel2);overflow:hidden">
+                  <div style="height:100%;width:{{ p.bar }};background:var(--sky);border-radius:3px"></div>
+                </div>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">TREATMENT ROOM</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">{{ injuryCount }}</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ injuries }}" as="i" hint-placeholder-count="3">
+            <div data-row data-tip="Latest club fitness update" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--panel2)">
+              <span style="width:6px;height:26px;border-radius:3px;background:{{ i.tone }};flex:none"></span>
+              <div style="display:flex;flex-direction:column;gap:2px">
+                <button onClick="{{ i.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;font-size:13.5px;font-weight:700;color:var(--ink);text-align:left">{{ i.name }}</button>
+                <span style="font-size:11.5px;font-weight:600;color:var(--dim)">{{ i.issue }}</span>
+              </div>
+              <span style="margin-left:auto;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:{{ i.tone }}">{{ i.back }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">TRANSFER DESK</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">JAN WINDOW</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ transfers }}" as="t" hint-placeholder-count="2">
+            <div style="display:flex;flex-direction:column;gap:5px;padding-bottom:12px;border-bottom:1px solid var(--line)">
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:10px;font-weight:800;letter-spacing:.12em;padding:3px 7px;border-radius:4px;background:{{ t.bg }};color:{{ t.fg }}">{{ t.tag }}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--dim)">{{ t.source }} · {{ t.time }}</span>
+              </div>
+              <span style="font-size:13.5px;font-weight:600;line-height:1.4;text-wrap:pretty">{{ t.text }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column:span 12;margin-top:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">NEWS &amp; MEDIA</span>
+        <div data-m="scrollx" style="display:flex;gap:16px">
+          <span style="font-size:12px;font-weight:700;color:var(--ink);border-bottom:2px solid var(--sky);padding-bottom:2px">All</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">Video</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">Match reports</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">Transfers</span>
+        </div>
+      </div>
+      <div data-m="cards1" style="display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+        <sc-for list="{{ news }}" as="n" hint-placeholder-count="4">
+          <article data-card data-toast="Opened in City+ — added to your watch list" style="background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer">
+            <div style="position:relative;aspect-ratio:16/10;background:var(--stripeBg);background-image:repeating-linear-gradient(135deg,var(--stripe) 0 2px,transparent 2px 11px);display:flex;align-items:flex-end;justify-content:space-between;padding:12px">
+              <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.06em;color:var(--dim);background:var(--panel);padding:3px 7px;border-radius:4px">{{ n.slot }}</span>
+              <sc-if value="{{ n.isVideo }}" hint-placeholder-val="{{ true }}">
+                <span style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 9px;border-radius:4px">
+                  <span style="width:0;height:0;border-left:6px solid #fff;border-top:4px solid transparent;border-bottom:4px solid transparent"></span>
+                  {{ n.duration }}
+                </span>
+              </sc-if>
+            </div>
+            <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+              <span style="font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--skyText)">{{ n.kicker }}</span>
+              <span style="font-size:15px;font-weight:700;line-height:1.32;text-wrap:pretty">{{ n.title }}</span>
+              <span style="margin-top:auto;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--dim)">{{ n.source }} · {{ n.time }}</span>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isFixtures }}" hint-placeholder-val="{{ true }}">
+  <main data-m="stack" style="max-width:1440px;margin:0 auto;padding:0 32px;display:flex;flex-direction:column;gap:24px">
+    <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:7px;min-width:0">
+        <span data-m="title" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:.95">FIXTURES &amp; RESULTS</span>
+        <span style="font-size:12.5px;font-weight:600;color:var(--dim)">2025/26 · all times AEST · {{ seasonMeta }}</span>
+      </div>
+      <div data-m="chiprow" style="margin-left:auto;display:flex;gap:8px;flex-wrap:wrap">
+        <sc-for list="{{ compFilters }}" as="c" hint-placeholder-count="5">
+          <span style="font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:9px 14px;border-radius:8px;cursor:pointer;background:{{ c.bg }};color:{{ c.fg }};border:1px solid {{ c.bd }}">{{ c.label }}</span>
+        </sc-for>
+      </div>
+    </div>
+
+    <sc-for list="{{ months }}" as="mo" hint-placeholder-count="3">
+      <section style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden">
+        <div data-m="mohead" style="display:flex;align-items:center;gap:14px;padding:16px 24px;background:var(--panel2);border-bottom:1px solid var(--line)">
+          <span style="font-size:12.5px;font-weight:800;letter-spacing:.14em">{{ mo.month }}</span>
+          <span style="font-size:11.5px;font-weight:600;color:var(--dim)">{{ mo.note }}</span>
+        </div>
+        <div data-m="mopad" style="padding:6px 24px 14px">
+          <sc-for list="{{ mo.matches }}" as="m" hint-placeholder-count="4">
+            <div data-row data-m="fx" style="display:grid;grid-template-columns:78px 46px minmax(0,1fr) 158px 74px 92px;gap:16px;align-items:center;padding:14px 10px;margin:0 -10px;border-radius:8px;border-bottom:1px solid var(--line)">
+              <span data-m="fx-d" style="font-size:11.5px;font-weight:800;letter-spacing:.1em;color:var(--dim)">{{ m.date }}</span>
+              <span data-m="fx-b" style="width:38px;height:38px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:{{ m.bg }};color:{{ m.fg }};font-family:'Barlow Condensed',sans-serif;font-size:14px;font-weight:700">{{ m.code }}</span>
+              <span data-m="fx-o" style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                <button onClick="{{ m.open }}" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:14.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:var(--skyText)">{{ m.opponent }}</button>
+                <span style="font-size:11px;font-weight:600;letter-spacing:.06em;color:var(--dim)">{{ m.ground }}</span>
+              </span>
+              <span data-m="fx-c" style="font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--skyText);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ m.comp }}</span>
+              <span data-m="fx-v" data-tip="{{ m.venueTip }}" style="font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--dim);text-align:center">{{ m.venue }}</span>
+              <sc-if value="{{ m.isResult }}" hint-placeholder-val="{{ true }}">
+                <span data-m="fx-s" style="text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;line-height:1;color:{{ m.toneFg }}">{{ m.score }}</span>
+              </sc-if>
+              <sc-if value="{{ m.isFixture }}" hint-placeholder-val="{{ true }}">
+                <span data-m="fx-s" style="text-align:right;font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:700;line-height:1">{{ m.time }}</span>
+              </sc-if>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isSquad }}" hint-placeholder-val="{{ true }}">
+  <main data-m="stack" style="max-width:1440px;margin:0 auto;padding:0 32px;display:flex;flex-direction:column;gap:26px">
+    <div style="display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span data-m="title" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:.95">FIRST-TEAM SQUAD</span>
+        <span style="font-size:12.5px;font-weight:600;color:var(--dim)">{{ squadMeta }} · appearances and goals across all competitions</span>
+      </div>
+      <div data-m="chiprow" style="margin-left:auto;display:flex;gap:8px">
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:9px 14px;border-radius:8px;background:#6CABDD;color:#0E1A38;cursor:pointer">All positions</span>
+        <span style="font-size:11.5px;font-weight:700;letter-spacing:.03em;padding:9px 14px;border-radius:8px;border:1px solid var(--line);color:var(--dim);cursor:pointer">Availability</span>
+      </div>
+    </div>
+
+    <sc-for list="{{ squad }}" as="g" hint-placeholder-count="4">
+      <section style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;align-items:center;gap:14px">
+          <span style="font-size:12px;font-weight:800;letter-spacing:.16em;color:var(--skyText)">{{ g.group }}</span>
+          <span style="flex:1;height:1px;background:var(--line)"></span>
+        </div>
+        <div data-m="cards1" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px">
+          <sc-for list="{{ g.players }}" as="p" hint-placeholder-count="3">
+            <div data-card style="min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:16px">
+              <div style="display:flex;align-items:center;gap:14px;min-width:0">
+                <span style="width:44px;height:44px;border-radius:12px;background:var(--chip);display:flex;align-items:center;justify-content:center;flex:none;font-family:'Barlow Condensed',sans-serif;font-size:21px;font-weight:700;color:var(--skyText)">{{ p.num }}</span>
+                <span style="display:flex;flex-direction:column;gap:3px;min-width:0">
+                  <button onClick="{{ p.open }}" data-tip="Open player page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;font-size:15px;font-weight:700;color:var(--ink);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%">{{ p.name }}</button>
+                  <span style="font-size:11px;font-weight:600;letter-spacing:.08em;color:var(--dim)">{{ p.nation }} · {{ p.age }} YRS</span>
+                </span>
+                <span data-tip="Latest club fitness update" style="margin-left:auto;flex:none;font-size:9.5px;font-weight:800;letter-spacing:.1em;padding:5px 9px;border-radius:5px;background:{{ p.statusBg }};color:{{ p.statusFg }}">{{ p.status }}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding-top:14px;border-top:1px solid var(--line)">
+                <span style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1">{{ p.apps }}</span>
+                  <span style="font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">APPS</span>
+                </span>
+                <span style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1;color:var(--skyText)">{{ p.goals }}</span>
+                  <span style="font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">GOALS</span>
+                </span>
+                <span style="display:flex;flex-direction:column;gap:2px">
+                  <span style="font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;line-height:1">{{ p.assists }}</span>
+                  <span style="font-size:9.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">ASSISTS</span>
+                </span>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isTables }}" hint-placeholder-val="{{ true }}">
+  <main data-m="grid" style="max-width:1440px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(12,1fr);gap:20px;align-items:start">
+    <div style="grid-column:span 12;display:flex;align-items:flex-end;gap:20px;flex-wrap:wrap">
+      <div style="display:flex;flex-direction:column;gap:7px">
+        <span data-m="title" style="font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:.95">TABLES</span>
+        <span style="font-size:12.5px;font-weight:600;color:var(--dim)">Full league table, plus where City sit in every other competition</span>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:18px;flex-wrap:wrap">
+        <sc-for list="{{ zones }}" as="z" hint-placeholder-count="3">
+          <span style="display:flex;align-items:center;gap:7px;font-size:11.5px;font-weight:600;color:var(--dim)">
+            <span style="width:10px;height:10px;border-radius:3px;background:{{ z.color }}"></span>{{ z.label }}
+          </span>
+        </sc-for>
+      </div>
+    </div>
+
+    <section style="grid-column:span 8;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">PREMIER LEAGUE</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">MATCHWEEK 12</span>
+      </div>
+      <div data-m="table" style="display:grid;grid-template-columns:44px minmax(0,1fr) 40px 46px 46px 118px;gap:8px;padding:0 10px 10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">
+        <span>#</span><span>CLUB</span><span data-m="num" style="text-align:center">P</span><span data-m="num" style="text-align:center">GD</span><span style="text-align:center">PTS</span><span style="text-align:right">FORM</span>
+      </div>
+      <sc-for list="{{ plTable }}" as="r" hint-placeholder-count="20">
+        <div data-row data-m="table" style="display:grid;grid-template-columns:44px minmax(0,1fr) 40px 46px 46px 118px;gap:8px;align-items:center;padding:9px 10px;border-radius:8px;background:{{ r.rowBg }}">
+          <span style="display:flex;align-items:center;gap:9px">
+            <span data-tip="{{ r.zoneTip }}" style="width:3px;height:18px;border-radius:2px;background:{{ r.zone }}"></span>
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:17px;font-weight:700;color:{{ r.rankFg }}">{{ r.pos }}</span>
+          </span>
+          <button onClick="{{ r.open }}" data-tip="Open club page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:13.5px;font-weight:{{ r.weight }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%" style-hover="color:var(--skyText)">{{ r.club }}</button>
+          <span data-m="num" style="text-align:center;font-size:13px;font-weight:600;color:var(--dim)">{{ r.played }}</span>
+          <span data-m="num" style="text-align:center;font-size:13px;font-weight:600;color:var(--dim)">{{ r.gd }}</span>
+          <span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700">{{ r.pts }}</span>
+          <span style="display:flex;gap:5px;justify-content:flex-end">
+            <sc-for list="{{ r.form }}" as="d" hint-placeholder-count="5">
+              <span data-tip="{{ d.tip }}" style="width:19px;height:19px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;line-height:1;background:{{ d.bg }};color:{{ d.fg }}">{{ d.ch }}</span>
+            </sc-for>
+          </span>
+        </div>
+      </sc-for>
+    </section>
+
+    <section style="grid-column:span 4;display:flex;flex-direction:column;gap:16px">
+      <sc-for list="{{ otherComps }}" as="c" hint-placeholder-count="4">
+        <div data-card style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="width:8px;height:8px;border-radius:50%;background:{{ c.tone }}"></span>
+            <span style="font-size:11px;font-weight:800;letter-spacing:.14em;color:var(--dim)">{{ c.label }}</span>
+          </div>
+          <span style="font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:700;line-height:1">{{ c.status }}</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--dim)">{{ c.detail }}</span>
+        </div>
+      </sc-for>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isPlayer }}" hint-placeholder-val="{{ true }}">
+  <main data-m="grid" style="max-width:1440px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(12,1fr);gap:20px;align-items:start">
+
+    <div data-m="backrow" style="grid-column:span 12;display:flex;align-items:center;gap:14px">
+      <button onClick="{{ goBack }}" data-m="tap" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--dim);height:34px;padding:0 14px;border-radius:8px" style-hover="color:var(--ink);border-color:var(--sky)">← {{ backLabel }}</button>
+      <span style="font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--dim)">PLAYER PROFILE · 2025/26</span>
+    </div>
+
+    <section data-m="col-side" style="grid-column:span 4;display:flex;flex-direction:column;gap:20px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:16px">
+        <div style="position:relative;aspect-ratio:3/4;border-radius:12px;overflow:hidden;background:var(--stripeBg);background-image:repeating-linear-gradient(135deg,var(--stripe) 0 2px,transparent 2px 12px)">
+        <span style="position:absolute;top:12px;left:12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.06em;color:var(--dim);background:var(--panel);padding:4px 8px;border-radius:5px">player portrait 3:4</span>
+        <span style="position:absolute;left:0;right:0;bottom:0;height:52%;background:linear-gradient(180deg,rgba(4,10,26,0) 0%,rgba(4,10,26,.22) 34%,rgba(4,10,26,.66) 68%,rgba(4,10,26,.94) 100%)"></span>
+        <span data-m="shirt" style="position:absolute;left:0;right:0;bottom:10px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:92px;font-weight:700;line-height:.8;letter-spacing:.01em;color:var(--sky);text-shadow:0 2px 20px rgba(0,0,0,.7)">{{ player.num }}</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <span data-m="pname" style="font-family:'Barlow Condensed',sans-serif;font-size:40px;font-weight:700;line-height:.95">{{ player.name }}</span>
+          <span style="font-size:12.5px;font-weight:600;color:var(--dim)">{{ player.role }} · {{ player.nation }} · {{ player.age }} years</span>
+        </div>
+        <span data-tip="Latest club fitness update" style="align-self:flex-start;font-size:9.5px;font-weight:800;letter-spacing:.1em;padding:6px 10px;border-radius:5px;background:{{ player.statusBg }};color:{{ player.statusFg }}">{{ player.status }}</span>
+        <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;padding-top:14px;border-top:1px solid var(--line)">
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">{{ player.height }}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">{{ player.foot }}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">{{ player.joined }}</span>
+          <span style="font-size:12px;font-weight:600;color:var(--dim)">{{ player.contract }}</span>
+        </div>
+      </div>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">UNDERLYING NUMBERS</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">THIS SEASON</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:16px">
+          <sc-for list="{{ player.metrics }}" as="m" hint-placeholder-count="4">
+            <div style="display:flex;flex-direction:column;gap:7px">
+              <div style="display:flex;align-items:center;gap:10px">
+                <span style="font-size:12.5px;font-weight:600">{{ m.label }}</span>
+                <span style="margin-left:auto;font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;line-height:1">{{ m.value }}</span>
+              </div>
+              <div style="height:5px;border-radius:3px;background:var(--panel2);overflow:hidden">
+                <div style="height:100%;width:{{ m.bar }};background:var(--sky);border-radius:3px"></div>
+              </div>
+              <span style="font-size:11px;font-weight:600;color:var(--dim)">{{ m.of }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section data-m="col-main" style="grid-column:span 8;container-type:inline-size;display:flex;flex-direction:column;gap:20px">
+      <div data-m="stats" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+        <sc-for list="{{ player.headline }}" as="s" hint-placeholder-count="4">
+          <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:8px;min-width:0">
+            <span style="font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--dim);line-height:1.2;min-height:24px">{{ s.label }}</span>
+            <span data-m="statbig" style="font-family:'Barlow Condensed',sans-serif;font-size:46px;font-weight:700;line-height:.9">{{ s.value }}</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.35;color:var(--dim);min-height:31px;text-wrap:pretty">{{ s.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">BY COMPETITION</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">2025/26</span>
+        </div>
+        <div data-m="pc" style="display:grid;grid-template-columns:minmax(0,1fr) 62px 62px 72px 82px;gap:8px;padding:0 10px 10px;font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">
+          <span>COMPETITION</span><span style="text-align:center">APPS</span><span style="text-align:center">GOALS</span><span style="text-align:center">ASSISTS</span><span data-m="pc-min" style="text-align:right">MINUTES</span>
+        </div>
+        <sc-for list="{{ player.comps }}" as="c" hint-placeholder-count="3">
+          <div data-row data-m="pc" style="display:grid;grid-template-columns:minmax(0,1fr) 62px 62px 72px 82px;gap:8px;align-items:center;padding:11px 10px;border-radius:8px">
+            <span style="font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.comp }}</span>
+            <span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700">{{ c.apps }}</span>
+            <span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700;color:var(--skyText)">{{ c.goals }}</span>
+            <span style="text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:19px;font-weight:700">{{ c.assists }}</span>
+            <span data-m="pc-min" style="text-align:right;font-size:13px;font-weight:600;color:var(--dim)">{{ c.mins }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">LAST FIVE</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">CONTRIBUTIONS</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <sc-for list="{{ player.form }}" as="g" hint-placeholder-count="5">
+            <div data-row data-m="l5" style="display:grid;grid-template-columns:52px 30px 84px minmax(0,1fr);gap:10px;align-items:center;padding:11px 10px;margin:0 -10px;border-radius:8px">
+              <button onClick="{{ g.open }}" data-tip="Open club page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-family:'Barlow Condensed',sans-serif;font-size:16px;font-weight:700" style-hover="color:var(--skyText)">{{ g.code }}</button>
+              <span data-tip="{{ g.venueTip }}" style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dim)">{{ g.venue }}</span>
+              <span style="font-size:12.5px;font-weight:700;white-space:nowrap;color:{{ g.fg }}">{{ g.score }}</span>
+              <span style="text-align:right;font-size:11.5px;font-weight:600;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.note }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </section>
+
+    <section style="grid-column:span 12;margin-top:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">{{ player.name }} · NEWS &amp; MEDIA</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">3 STORIES</span>
+      </div>
+      <div data-m="cards1" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+        <sc-for list="{{ player.news }}" as="n" hint-placeholder-count="3">
+          <article data-card data-toast="Opened in City+ — added to your watch list" style="min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;cursor:pointer">
+            <div style="position:relative;aspect-ratio:16/9;background:var(--stripeBg);background-image:repeating-linear-gradient(135deg,var(--stripe) 0 2px,transparent 2px 11px);display:flex;align-items:flex-end;padding:12px">
+              <span style="font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;letter-spacing:.06em;color:var(--dim);background:var(--panel);padding:3px 7px;border-radius:4px">{{ n.slot }}</span>
+              <sc-if value="{{ n.isVideo }}" hint-placeholder-val="{{ true }}">
+                <span style="position:absolute;top:12px;left:12px;display:flex;align-items:center;gap:6px;background:var(--red);color:#fff;font-size:10px;font-weight:800;letter-spacing:.1em;padding:4px 9px;border-radius:4px">
+                  <span style="width:0;height:0;border-left:6px solid #fff;border-top:4px solid transparent;border-bottom:4px solid transparent"></span>
+                  {{ n.duration }}
+                </span>
+              </sc-if>
+            </div>
+            <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:10px;flex:1">
+              <span style="font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--skyText)">{{ n.kicker }}</span>
+              <span style="font-size:15px;font-weight:700;line-height:1.32;text-wrap:pretty">{{ n.title }}</span>
+              <span style="margin-top:auto;font-size:11px;font-weight:600;letter-spacing:.04em;color:var(--dim)">{{ n.source }} · {{ n.time }}</span>
+            </div>
+          </article>
+        </sc-for>
+      </div>
+    </section>
+
+    <section style="grid-column:span 12;margin-top:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">MORE FROM THE SQUAD</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">TAP A PLAYER</span>
+      </div>
+      <div data-m="cards2" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px">
+        <sc-for list="{{ player.related }}" as="r" hint-placeholder-count="4">
+          <div data-card onClick="{{ r.open }}" style="min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:16px;overflow:hidden;box-shadow:var(--shadow);cursor:pointer">
+            <div style="position:relative;aspect-ratio:4/3;background:var(--stripeBg);background-image:repeating-linear-gradient(135deg,var(--stripe) 0 2px,transparent 2px 12px)">
+              <span style="position:absolute;left:0;right:0;bottom:0;height:56%;background:linear-gradient(180deg,rgba(4,10,26,0) 0%,rgba(4,10,26,.24) 36%,rgba(4,10,26,.7) 72%,rgba(4,10,26,.95) 100%)"></span>
+              <span style="position:absolute;left:0;right:0;bottom:6px;text-align:center;font-family:'Barlow Condensed',sans-serif;font-size:42px;font-weight:700;line-height:.82;color:#fff;text-shadow:0 2px 14px rgba(0,0,0,.6)">{{ r.num }}</span>
+            </div>
+            <div style="padding:16px 18px 18px;display:flex;flex-direction:column;gap:5px">
+              <span style="font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.name }}</span>
+              <span style="font-size:11.5px;font-weight:600;color:var(--dim)">{{ r.nation }} · {{ r.goals }}</span>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </section>
+  </main>
+  </sc-if>
+
+  <sc-if value="{{ isClub }}" hint-placeholder-val="{{ true }}">
+  <main data-m="grid" style="max-width:1440px;margin:0 auto;padding:0 32px;display:grid;grid-template-columns:repeat(12,1fr);gap:20px;align-items:start">
+
+    <div data-m="backrow" style="grid-column:span 12;display:flex;align-items:center;gap:14px">
+      <button onClick="{{ goBack }}" data-m="tap" style="display:flex;align-items:center;gap:8px;background:none;border:1px solid var(--line);cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.04em;color:var(--dim);height:34px;padding:0 14px;border-radius:8px" style-hover="color:var(--ink);border-color:var(--sky)">← {{ backLabel }}</button>
+      <span style="font-size:11px;font-weight:700;letter-spacing:.14em;color:var(--dim)">CLUB PROFILE · 2025/26</span>
+    </div>
+
+    <section data-m="col-side" style="grid-column:span 5;display:flex;flex-direction:column;gap:20px">
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px;display:flex;flex-direction:column;gap:20px" data-m="card">
+      <div style="display:flex;align-items:center;gap:16px">
+        <span style="width:66px;height:66px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;background:{{ club.bg }};color:{{ club.fg }};font-family:'Barlow Condensed',sans-serif;font-size:23px;font-weight:700">{{ club.code }}</span>
+        <span style="display:flex;flex-direction:column;gap:5px;min-width:0">
+          <span data-m="cname" style="font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:700;line-height:.95">{{ club.name }}</span>
+          <span style="font-size:12px;font-weight:600;letter-spacing:.04em;color:var(--dim)">{{ club.nick }}</span>
+        </span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:12px;padding-top:18px;border-top:1px solid var(--line)">
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim);width:96px;flex:none">STADIUM</span>
+          <span style="font-size:13px;font-weight:600">{{ club.stadium }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim);width:96px;flex:none">CAPACITY</span>
+          <span style="font-size:13px;font-weight:600">{{ club.capacity }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim);width:96px;flex:none">MANAGER</span>
+          <span style="font-size:13px;font-weight:600">{{ club.manager }}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <span style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim);width:96px;flex:none">FOUNDED</span>
+          <span style="font-size:13px;font-weight:600">{{ club.founded }}</span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:10px;padding-top:18px;border-top:1px solid var(--line)">
+        <span style="font-size:10.5px;font-weight:700;letter-spacing:.12em;color:var(--dim)">LEAGUE FORM</span>
+        <span style="display:flex;gap:6px">
+          <sc-for list="{{ club.form }}" as="d" hint-placeholder-count="5">
+            <span data-tip="{{ d.tip }}" style="width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;line-height:1;background:{{ d.bg }};color:{{ d.fg }}">{{ d.ch }}</span>
+          </sc-for>
+        </span>
+      </div>
+    </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">SEASON SPLIT</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">PREMIER LEAGUE</span>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ club.splits }}" as="s" hint-placeholder-count="3">
+            <div style="display:flex;align-items:center;gap:14px">
+              <span style="font-size:12.5px;font-weight:600;width:64px;flex:none">{{ s.label }}</span>
+              <span style="font-family:'Barlow Condensed',sans-serif;font-size:20px;font-weight:700;width:32px;flex:none;line-height:1">{{ s.value }}</span>
+              <span style="flex:1;height:8px;border-radius:4px;background:var(--panel2);overflow:hidden">
+                <span style="display:block;height:100%;width:{{ s.bar }};background:{{ s.color }};border-radius:4px"></span>
+              </span>
+              <span style="font-size:11.5px;font-weight:600;color:var(--dim);width:44px;text-align:right;flex:none">{{ s.bar }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+
+    <sc-if value="{{ club.showH2H }}" hint-placeholder-val="{{ true }}">
+        <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">AGAINST CITY</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">LAST FOUR</span>
+        </div>
+        <div style="padding:16px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px;margin-bottom:16px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.12em;color:var(--skyText)">NEXT MEETING</span>
+          <span style="font-size:13px;font-weight:600;line-height:1.4;text-wrap:pretty">{{ club.h2h.next }}</span>
+        </div>
+        <sc-for list="{{ club.h2h.rows }}" as="h" hint-placeholder-count="4">
+          <div data-row style="display:grid;grid-template-columns:90px 30px minmax(0,1fr);gap:12px;align-items:center;padding:12px 10px;margin:0 -10px;border-radius:8px">
+            <span style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dim)">{{ h.date }}</span>
+            <span style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dim)">{{ h.venue }}</span>
+            <span style="text-align:right;font-size:13px;font-weight:700;color:{{ h.fg }}">{{ h.score }}</span>
+          </div>
+        </sc-for>
+        </div>
+    </sc-if>
+    </section>
+
+    <section data-m="col-main" style="grid-column:span 7;container-type:inline-size;display:flex;flex-direction:column;gap:20px">
+      <div data-m="stats" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+        <sc-for list="{{ club.headline }}" as="s" hint-placeholder-count="4">
+          <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px;display:flex;flex-direction:column;gap:8px;min-width:0">
+            <span style="font-size:10px;font-weight:800;letter-spacing:.14em;color:var(--dim);line-height:1.2;min-height:24px">{{ s.label }}</span>
+            <span data-m="statbig" style="font-family:'Barlow Condensed',sans-serif;font-size:44px;font-weight:700;line-height:.9">{{ s.value }}</span>
+            <span style="font-size:11.5px;font-weight:600;line-height:1.35;color:var(--dim);min-height:31px;text-wrap:pretty">{{ s.sub }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+        <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+          <span style="font-size:13px;font-weight:800;letter-spacing:.06em">RECENT FORM</span>
+          <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">LAST FIVE · NEWEST FIRST</span>
+        </div>
+        <sc-for list="{{ club.recent }}" as="g" hint-placeholder-count="5">
+          <div data-row data-m="l5" style="display:grid;grid-template-columns:52px 30px 84px minmax(0,1fr);gap:12px;align-items:center;padding:12px 10px;margin:0 -10px;border-radius:8px">
+            <button onClick="{{ g.open }}" data-tip="Open club page" style="background:none;border:0;padding:0;cursor:pointer;font-family:'Barlow Condensed',sans-serif;color:inherit;text-align:left;font-size:16px;font-weight:700" style-hover="color:var(--skyText)">{{ g.code }}</button>
+            <span data-tip="{{ g.venueTip }}" style="font-size:11px;font-weight:800;letter-spacing:.1em;color:var(--dim)">{{ g.venue }}</span>
+            <span style="font-size:12.5px;font-weight:700;white-space:nowrap;color:{{ g.fg }}">{{ g.score }}</span>
+            <span style="text-align:right;font-size:12px;font-weight:600;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.club }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="container-type:inline-size;background:var(--panel);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:24px" data-m="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;min-height:26px;margin-bottom:18px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">SQUAD</span>
+        <span style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--dim)">REGISTERED PLAYERS</span>
+      </div>
+      <div data-m="facts" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+        <sc-for list="{{ club.squadFacts }}" as="s" hint-placeholder-count="4">
+          <div style="min-width:0;padding:16px;border-radius:10px;background:var(--panel2);border:1px solid var(--line);display:flex;flex-direction:column;gap:6px">
+            <span style="font-family:'Barlow Condensed',sans-serif;font-size:30px;font-weight:700;line-height:1">{{ s.value }}</span>
+            <span style="font-size:9.5px;font-weight:800;letter-spacing:.1em;color:var(--dim);line-height:1.3">{{ s.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ club.hasTop }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:4px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--dim);margin-bottom:8px">TOP CONTRIBUTORS</span>
+          <sc-for list="{{ club.top }}" as="p" hint-placeholder-count="4">
+            <div data-row style="display:flex;align-items:center;gap:14px;padding:11px 10px;margin:0 -10px;border-radius:8px">
+              <span style="width:32px;height:32px;border-radius:9px;flex:none;display:flex;align-items:center;justify-content:center;background:var(--chip);font-family:'Barlow Condensed',sans-serif;font-size:15px;font-weight:700;color:var(--skyText)">{{ p.num }}</span>
+              <button onClick="{{ p.open }}" data-tip="Open player page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:13.5px;font-weight:700" style-hover="color:var(--skyText)">{{ p.name }}</button>
+              <span style="margin-left:auto;font-size:12px;font-weight:600;color:var(--dim)">{{ p.goals }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ club.hasAbsences }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--dim);margin-bottom:2px">REPORTED ABSENCES</span>
+          <sc-for list="{{ club.absences }}" as="a" hint-placeholder-count="3">
+            <div data-row data-tip="Sample data — feeds wired later" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--panel2)">
+              <span style="width:6px;height:26px;border-radius:3px;background:{{ a.tone }};flex:none"></span>
+              <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <span style="font-size:13.5px;font-weight:700">{{ a.role }}</span>
+                <span style="font-size:11.5px;font-weight:600;color:var(--dim)">{{ a.issue }}</span>
+              </span>
+              <span style="margin-left:auto;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:{{ a.tone }}">{{ a.back }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ club.cityInjuries }}" hint-placeholder-val="{{ true }}">
+        <div style="margin-top:20px;padding-top:18px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:10px">
+          <span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:var(--dim);margin-bottom:2px">TREATMENT ROOM</span>
+          <sc-for list="{{ injuries }}" as="i" hint-placeholder-count="3">
+            <div data-row style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--panel2)">
+              <span style="width:6px;height:26px;border-radius:3px;background:{{ i.tone }};flex:none"></span>
+              <span style="display:flex;flex-direction:column;gap:2px;min-width:0">
+                <button onClick="{{ i.open }}" data-tip="Open player page" style="background:none;border:0;padding:0;cursor:pointer;font-family:Archivo,sans-serif;color:inherit;text-align:left;font-size:13.5px;font-weight:700" style-hover="color:var(--skyText)">{{ i.name }}</button>
+                <span style="font-size:11.5px;font-weight:600;color:var(--dim)">{{ i.issue }}</span>
+              </span>
+              <span style="margin-left:auto;font-size:11.5px;font-weight:700;letter-spacing:.05em;color:{{ i.tone }}">{{ i.back }}</span>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+    </div>
+    </section>
+
+  </main>
+  </sc-if>
+
+  <nav data-m="tabbar" aria-label="Main" style="display:none;position:fixed;left:0;right:0;bottom:0;z-index:80;background:var(--panel);border-top:1px solid var(--line);box-shadow:0 -8px 26px rgba(0,0,0,.16);padding:6px 8px calc(6px + env(safe-area-inset-bottom))">
+    <div style="display:flex;gap:4px">
+      <sc-for list="{{ nav }}" as="t" hint-placeholder-count="4">
+        <button onClick="{{ t.select }}" style="flex:1 1 0;min-width:0;min-height:52px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;background:none;border:0;border-radius:12px;cursor:pointer;font-family:Archivo,sans-serif;font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:{{ t.fg }}">
+          <span style="width:20px;height:3px;border-radius:2px;background:{{ t.bd }}"></span>
+          {{ t.label }}
+        </button>
+      </sc-for>
+    </div>
+  </nav>
+
+  <footer data-m="page" style="max-width:1440px;margin:40px auto 0;padding:0 32px">
+    <div data-m="foot" style="border-top:1px solid var(--line);padding-top:20px;display:flex;align-items:center;gap:14px">
+      <span style="font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--dim)">CITY HUB · PERSONAL DASHBOARD</span>
+      <span style="margin-left:auto;font-size:11px;font-weight:600;color:var(--dim)">Sample data · all times AEST</span>
+    </div>
+  </footer>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;'dark'|'light'&quot;,&quot;section&quot;:&quot;Appearance&quot;},&quot;matchState&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;upcoming&quot;,&quot;live&quot;],&quot;default&quot;:&quot;upcoming&quot;,&quot;tsType&quot;:&quot;'upcoming'|'live'&quot;,&quot;section&quot;:&quot;Match day&quot;},&quot;supporterName&quot;:{&quot;editor&quot;:&quot;text&quot;,&quot;default&quot;:&quot;Alec&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Appearance&quot;}}">
+class Component extends DCLogic {
+  state = { theme: null, comp: 'PL', page: 'Overview', player: 'Erling Haaland', club: 'Arsenal', fromPage: 'Squad', now: Date.now() };
+
+  componentDidUpdate() { this.syncTheme(); }
+  syncTheme() {
+    const t = this.state.theme || this.props.theme || 'dark';
+    if (this._tip) this._tip.setAttribute('data-theme', t);
+    if (this._toastBox) this._toastBox.setAttribute('data-theme', t);
+  }
+  installUI() {
+    const tip = document.createElement('div');
+    tip.style.cssText = 'position:fixed;left:0;top:0;z-index:90;pointer-events:none;opacity:0;transform:translateY(4px);transition:opacity .14s ease,transform .14s ease;font-family:Archivo,Helvetica,sans-serif;font-size:11.5px;font-weight:600;line-height:1.35;max-width:240px;padding:7px 10px;border-radius:8px;background:var(--panel);color:var(--ink);border:1px solid var(--line);box-shadow:0 10px 26px rgba(0,0,0,.28)';
+    tip.setAttribute('data-m', 'tip');
+    document.body.appendChild(tip);
+    this._tip = tip;
+
+    const box = document.createElement('div');
+    box.style.cssText = 'position:fixed;right:24px;bottom:24px;z-index:95;display:flex;flex-direction:column-reverse;gap:12px;pointer-events:none';
+    box.setAttribute('data-m', 'toasts');
+    document.body.appendChild(box);
+    this._toastBox = box;
+    this.syncTheme();
+
+    const place = el => {
+      const r = el.getBoundingClientRect();
+      const t = tip.getBoundingClientRect();
+      let x = r.left + r.width / 2 - t.width / 2;
+      x = Math.max(12, Math.min(x, window.innerWidth - t.width - 12));
+      let y = r.top - t.height - 8;
+      if (y < 12) y = r.bottom + 8;
+      tip.style.left = Math.round(x) + 'px';
+      tip.style.top = Math.round(y) + 'px';
+    };
+    const hide = () => { clearTimeout(this._tipT); tip.style.opacity = '0'; tip.style.transform = 'translateY(4px)'; };
+
+    this._over = e => {
+      const el = e.target.closest && e.target.closest('[data-tip]');
+      if (!el || !el.getAttribute('data-tip')) return;
+      clearTimeout(this._tipT);
+      this._tipT = setTimeout(() => {
+        tip.textContent = el.getAttribute('data-tip');
+        tip.style.opacity = '1';
+        tip.style.transform = 'translateY(0)';
+        place(el);
+      }, 250);
+    };
+    this._out = e => { if (e.target.closest && e.target.closest('[data-tip]')) hide(); };
+    this._click = e => {
+      hide();
+      const el = e.target.closest && e.target.closest('[data-toast]');
+      if (!el) return;
+      const tones = { sky: '#6CABDD', gold: '#FFC659', red: '#EC3325' };
+      this.toast(el.getAttribute('data-toast'), tones[el.getAttribute('data-toast-tone')] || tones.sky);
+    };
+    document.addEventListener('mouseover', this._over);
+    document.addEventListener('mouseout', this._out);
+    document.addEventListener('click', this._click);
+    window.addEventListener('scroll', hide, true);
+    this._hide = hide;
+  }
+  toast(message, tone) {
+    const box = this._toastBox;
+    if (!box || !message) return;
+    while (box.children.length >= 3) box.removeChild(box.firstChild);
+    const el = document.createElement('div');
+    el.style.cssText = 'pointer-events:auto;max-width:340px;display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:10px;background:var(--panel);color:var(--ink);border:1px solid var(--line);border-left:4px solid ' + tone + ';box-shadow:0 14px 34px rgba(0,0,0,.3);font-family:Archivo,Helvetica,sans-serif;font-size:13px;font-weight:600;line-height:1.4;animation:toastIn .22s cubic-bezier(.2,.8,.2,1) both';
+    el.textContent = message;
+    box.appendChild(el);
+    setTimeout(() => {
+      el.style.transition = 'opacity .18s ease';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 200);
+    }, 3400);
+  }
+
+  clubMeta() {
+    return {
+      'Manchester City': ['MCI', 'Etihad Stadium', '53,400', 'Pep Guardiola', 1880, 'The Citizens'],
+      'Arsenal': ['ARS', 'Emirates Stadium', '60,704', 'Mikel Arteta', 1886, 'The Gunners'],
+      'Liverpool': ['LIV', 'Anfield', '61,276', 'Arne Slot', 1892, 'The Reds'],
+      'Chelsea': ['CHE', 'Stamford Bridge', '40,343', 'Enzo Maresca', 1905, 'The Blues'],
+      'Aston Villa': ['AVL', 'Villa Park', '42,657', 'Unai Emery', 1874, 'The Villans'],
+      'Newcastle': ['NEW', "St James' Park", '52,305', 'Eddie Howe', 1892, 'The Magpies'],
+      'Tottenham': ['TOT', 'Tottenham Hotspur Stadium', '62,850', 'Thomas Frank', 1882, 'Spurs'],
+      'Tottenham Hotspur': ['TOT', 'Tottenham Hotspur Stadium', '62,850', 'Thomas Frank', 1882, 'Spurs'],
+      'Brighton': ['BHA', 'Amex Stadium', '31,876', 'Fabian Hürzeler', 1901, 'The Seagulls'],
+      'Nottingham Forest': ['NFO', 'City Ground', '30,404', 'Nuno Espírito Santo', 1865, 'The Tricky Trees'],
+      'Nottm Forest': ['NFO', 'City Ground', '30,404', 'Nuno Espírito Santo', 1865, 'The Tricky Trees'],
+      'Bournemouth': ['BOU', 'Vitality Stadium', '11,307', 'Andoni Iraola', 1899, 'The Cherries'],
+      'Fulham': ['FUL', 'Craven Cottage', '29,589', 'Marco Silva', 1879, 'The Cottagers'],
+      'West Ham': ['WHU', 'London Stadium', '62,500', 'Graham Potter', 1895, 'The Irons'],
+      'Everton': ['EVE', 'Hill Dickinson Stadium', '52,888', 'David Moyes', 1878, 'The Toffees'],
+      'Crystal Palace': ['CRY', 'Selhurst Park', '25,486', 'Oliver Glasner', 1905, 'The Eagles'],
+      'Manchester United': ['MUN', 'Old Trafford', '74,310', 'Rúben Amorim', 1878, 'The Red Devils'],
+      'Wolves': ['WOL', 'Molineux', '31,750', 'Vítor Pereira', 1877, 'Wolves'],
+      'Leeds United': ['LEE', 'Elland Road', '37,645', 'Daniel Farke', 1919, 'The Whites'],
+      'Burnley': ['BUR', 'Turf Moor', '21,944', 'Scott Parker', 1882, 'The Clarets'],
+      'Sunderland': ['SUN', 'Stadium of Light', '49,000', 'Régis Le Bris', 1879, 'The Black Cats'],
+      'Ipswich Town': ['IPS', 'Portman Road', '30,311', 'Kieran McKenna', 1878, 'The Tractor Boys'],
+      'Bayern München': ['BAY', 'Allianz Arena', '75,024', 'Vincent Kompany', 1900, 'Die Roten'],
+      'Real Madrid': ['RMA', 'Santiago Bernabéu', '78,297', 'Xabi Alonso', 1902, 'Los Blancos'],
+      'Inter': ['INT', 'San Siro', '75,923', 'Cristian Chivu', 1908, 'Nerazzurri'],
+      'Sporting CP': ['SPO', 'Estádio José Alvalade', '50,095', 'Rui Borges', 1906, 'Os Leões'],
+      'Atlético Madrid': ['ATM', 'Metropolitano', '70,460', 'Diego Simeone', 1903, 'Los Colchoneros'],
+      'PSV': ['PSV', 'Philips Stadion', '35,000', 'Peter Bosz', 1913, 'Boeren'],
+      'Juventus': ['JUV', 'Allianz Stadium', '41,507', 'Luciano Spalletti', 1897, 'La Vecchia Signora'],
+      'Watford': ['WAT', 'Vicarage Road', '22,200', 'Javi Gracia', 1881, 'The Hornets'],
+      'Luton Town': ['LUT', 'Kenilworth Road', '11,500', 'Matt Bloomfield', 1885, 'The Hatters'],
+      'Brentford': ['BRE', 'Gtech Community Stadium', '17,250', 'Keith Andrews', 1889, 'The Bees'],
+      'Al Ain': ['AIN', 'Hazza bin Zayed', '25,053', 'Vladimir Ivić', 1968, 'The Boss'],
+      'Wydad AC': ['WAC', 'Stade Mohammed V', '45,000', 'Amine Benhachem', 1937, 'Le Wydad'],
+      'Al Hilal': ['HIL', 'Kingdom Arena', '25,000', 'Simone Inzaghi', 1957, 'The Leader'],
+      'Feyenoord': ['FEY', 'De Kuip', '47,500', 'Robin van Persie', 1908, 'De Stadionclub'],
+      'Slavia Praha': ['SLA', 'Eden Aréna', '19,370', 'Jindřich Trpišovský', 1892, 'Sešívaní'],
+      'Palermo': ['PAL', 'Renzo Barbera', '36,349', 'Filippo Inzaghi', 1900, 'Rosanero']
+    };
+  }
+
+  clubFromCode(code) {
+    const meta = this.clubMeta();
+    const hit = Object.keys(meta).find(k => meta[k][0] === code);
+    return hit || code;
+  }
+
+  openClub(name) {
+    if (!name) return;
+    const s = this.state;
+    this.nav({ page: 'Club', club: name, fromPage: (s.page === 'Club' || s.page === 'Player') ? s.fromPage : s.page });
+  }
+
+  clubRecord(rawName, dark) {
+    const alias = {
+      'Nottm Forest': 'Nottingham Forest', 'Tottenham Hotspur': 'Tottenham',
+      'Manchester Utd': 'Manchester United', 'Man City': 'Manchester City', 'Spurs': 'Tottenham'
+    };
+    const table = this.plFull(dark);
+    const name = table.find(r => r.club === rawName) ? rawName : (alias[rawName] || rawName);
+    const meta = this.clubMeta()[name] || this.clubMeta()[rawName] || ['---', 'Stadium to be wired', '—', '—', '—', ''];
+    const row = table.find(r => r.club === name);
+    const isCity = name === 'Manchester City';
+    const played = row ? row.played : 5;
+    const pts = row ? row.pts : 11;
+    const w = row ? row.w : 3;
+    const d = row ? row.d : 2;
+    const l = row ? row.l : 0;
+    const gf = row ? row.gf : 9;
+    const ga = row ? row.ga : 4;
+
+    const badge = { 'Manchester City': ['#6CABDD', '#1C2C5B'], 'Arsenal': ['#EC3325', '#fff'], 'Liverpool': ['#C8102E', '#fff'], 'Chelsea': ['#034694', '#fff'], 'Tottenham': ['#132257', '#fff'], 'Newcastle': ['#241F20', '#fff'], 'Aston Villa': ['#95BFE5', '#670E36'], 'Everton': ['#003399', '#fff'], 'Real Madrid': ['#FFC659', '#1C2C5B'], 'Bayern München': ['#DC052D', '#fff'] }[name] || ['#6CABDD', '#1C2C5B'];
+    const tone = { W: '#2FA46A', D: dark ? '#B9CCE6' : '#42537A', L: '#EC3325' };
+    /* recent results are derived from this club's own form dots, newest first */
+    const dots = row ? row.form : this.formDots('WDWWD', dark ? 'dark' : 'light');
+    const seq = dots.map(x => x.ch).slice().reverse();
+    const scores = { W: ['2–0', '3–1', '2–1', '4–0', '1–0'], D: ['1–1', '2–2', '0–0', '1–1', '2–2'], L: ['0–1', '1–2', '0–2', '1–3', '2–3'] };
+    const codes = this.clubMeta();
+    const pool = table.map(r => r.club).filter(c => c !== name);
+    const idx = Math.max(0, table.findIndex(r => r.club === name));
+    const rivals = pool.filter(c => c !== 'Manchester City');
+    const authored = this.comps().PL.recent;
+    const recentRaw = isCity
+      ? authored.map(g => [(codes[g.opponent] || ['---'])[0], g.venue, g.tone + ' ' + g.score, g.tone, g.opponent])
+      : seq.map((ch, i) => {
+          const opp = rivals[(idx + 3 + i * 4) % rivals.length];
+          return [(codes[opp] || ['---'])[0], i % 2 ? 'A' : 'H', ch + ' ' + scores[ch][i], ch, opp];
+        });
+    let nextMeeting = 'No fixture scheduled yet';
+    this.seasonData(dark).forEach(mo => mo.matches.forEach(m => {
+      const opp = table.find(r => r.club === m.opponent) ? m.opponent : (alias[m.opponent] || m.opponent);
+      if (nextMeeting === 'No fixture scheduled yet' && m.isFixture && opp === name) {
+        nextMeeting = m.comp + ' · ' + m.ground + ' · ' + m.date + ' ' + mo.month.slice(0, 3) + ', ' + m.time + ' AEST';
+      }
+    }));
+    const absences = isCity ? null : [
+      { role: 'Centre-back', issue: 'Knee · returns to training this week', back: '2 WEEKS', tone: dark ? '#FFC659' : '#D4A12A' },
+      { role: 'Winger', issue: 'Knock picked up in the last round', back: 'DOUBTFUL', tone: dark ? '#8AA2C6' : '#5D6E90' },
+      { role: 'Striker', issue: 'Hamstring · out of the squad', back: 'INJURED', tone: '#EC3325' }
+    ];
+    const top = isCity ? this.relatedPlayers('', dark).slice(0, 4) : null;
+    return {
+      name, code: meta[0], bg: badge[0], fg: badge[1], nick: meta[5], stadium: meta[1],
+      capacity: meta[2], manager: meta[3], founded: meta[4], isCity, showH2H: !isCity,
+      hasTop: !!top, top: top || [],
+      hasAbsences: !!absences, absences: absences || [],
+      cityInjuries: isCity,
+      headline: [
+        { label: 'LEAGUE POSITION', value: row ? row.pos : '—', sub: row ? 'Premier League' : 'not in this league' },
+        { label: 'POINTS', value: pts, sub: (pts / Math.max(1, played)).toFixed(2) + ' per game' },
+        { label: 'GOAL DIFFERENCE', value: row ? row.gd : (gf - ga > 0 ? '+' : '') + (gf - ga), sub: gf + ' scored · ' + ga + ' conceded' },
+        { label: 'RECORD', value: w + '-' + d + '-' + l, sub: played + ' matches played' }
+      ],
+      splits: [
+        { label: 'Won', value: w, bar: Math.round((w / Math.max(1, played)) * 100) + '%', color: '#2FA46A' },
+        { label: 'Drawn', value: d, bar: Math.round((d / Math.max(1, played)) * 100) + '%', color: dark ? '#2C3C6B' : '#C9D5E6' },
+        { label: 'Lost', value: l, bar: Math.round((l / Math.max(1, played)) * 100) + '%', color: '#EC3325' }
+      ],
+      form: row ? row.form : this.formDots('WWDWL', dark ? 'dark' : 'light'),
+      recent: recentRaw.map(r => ({
+        code: r[0], club: r[4], venue: r[1], score: r[2], fg: tone[r[3]],
+        venueTip: r[1] === 'H' ? 'Home fixture' : 'Away fixture',
+        open: () => this.openClub(r[4])
+      })),
+      squadFacts: [
+        { label: 'SQUAD', value: 24 + (String(name).length % 4) },
+        { label: 'AVG AGE', value: (25.4 + (String(name).length % 9) / 10).toFixed(1) },
+        { label: 'CAPPED', value: 12 + (String(name).length % 7) },
+        { label: 'ACADEMY', value: 3 + (String(name).length % 4) }
+      ],
+      h2h: {
+        next: nextMeeting,
+        rows: [
+          { date: 'APR 2025', venue: 'A', score: 'W 2–1', fg: tone.W },
+          { date: 'DEC 2024', venue: 'H', score: 'D 1–1', fg: tone.D },
+          { date: 'MAR 2024', venue: 'H', score: 'W 3–0', fg: tone.W },
+          { date: 'OCT 2023', venue: 'A', score: 'L 1–2', fg: tone.L }
+        ]
+      }
+    };
+  }
+
+  openPlayer(name) {
+    if (!name) return;
+    const s = this.state;
+    this.nav({ page: 'Player', player: name, fromPage: s.page === 'Player' ? s.fromPage : s.page });
+  }
+
+  playerRecord(name, dark) {
+    const groups = this.squadData(dark);
+    let rec = null, role = '';
+    groups.forEach(g => g.players.forEach(p => { if (p.name === name) { rec = p; role = g.group; } }));
+    if (!rec) rec = { num: 9, name: name || 'Erling Haaland', nation: 'NOR', age: 25, apps: 16, goals: 18, assists: 3, status: 'AVAILABLE', statusFg: '#2FA46A', statusBg: dark ? 'rgba(47,164,106,.16)' : '#E4F5EC' };
+    const roleLabel = { GOALKEEPERS: 'Goalkeeper', DEFENDERS: 'Defender', MIDFIELDERS: 'Midfielder', FORWARDS: 'Forward' }[role] || 'Forward';
+    const mins = rec.apps * 76;
+    const shots = rec.goals * 3 + 9;
+    const key = { GOALKEEPERS: 'GK', DEFENDERS: 'DEF', MIDFIELDERS: 'MID', FORWARDS: 'FWD' }[role] || 'FWD';
+    const sheets = Math.round(rec.apps * 0.45);
+    const saves = rec.apps * 2 + 3;
+    const pass = 78 + (rec.num % 14);
+    const duels = 46 + (rec.num % 22);
+    const chances = rec.assists * 4 + Math.round(rec.apps / 2);
+    const pct = v => Math.max(0, Math.min(100, v)) + '%';
+    const splitA = [Math.round(rec.apps * 0.6), Math.round(rec.apps * 0.25), rec.apps - Math.round(rec.apps * 0.6) - Math.round(rec.apps * 0.25)];
+    const splitG = [Math.round(rec.goals * 0.6), Math.round(rec.goals * 0.27), rec.goals - Math.round(rec.goals * 0.6) - Math.round(rec.goals * 0.27)];
+    const splitS = [Math.round(rec.assists * 0.6), Math.round(rec.assists * 0.25), rec.assists - Math.round(rec.assists * 0.6) - Math.round(rec.assists * 0.25)];
+    const comps = ['Premier League', 'Champions League', 'Domestic cups'].map((c, i) => ({
+      comp: c, apps: Math.max(0, splitA[i]), goals: Math.max(0, splitG[i]), assists: Math.max(0, splitS[i]),
+      mins: Math.max(0, splitA[i]) * 76
+    }));
+    const tone = { W: '#2FA46A', D: dark ? '#B9CCE6' : '#42537A', L: '#EC3325' };
+    const unavail = rec.status !== 'AVAILABLE';
+    const issue = { 'Rodri': 'knee', 'John Stones': 'hamstring', 'Nathan Aké': 'calf' }[rec.name] || 'injury';
+    const notes = unavail ? [
+      'Out — ' + issue, 'Out — ' + issue, 'Out — ' + issue,
+      rec.status === 'DOUBTFUL' ? 'Unused substitute' : 'Unavailable', 'Unavailable'
+    ] : {
+      GK: ['Clean sheet, 3 saves', '5 saves', 'Clean sheet', '2 saves', '4 saves'],
+      DEF: ['90 mins, clean sheet', '90 mins', '1 assist', '78 mins', 'Clean sheet'],
+      MID: ['1 assist', '90 mins', '2 chances created', '1 assist', '68 mins'],
+      FWD: rec.goals > 6
+        ? ['2 goals', '1 goal', '1 assist', '1 goal, 1 assist', '—']
+        : ['1 goal', '—', '1 assist', '62 mins', '—']
+    }[key];
+    const formRaw = [['WOL', 'H', 'W 4–0', 'W'], ['BRE', 'A', 'W 2–1', 'W'], ['LIV', 'H', 'D 1–1', 'D'], ['SPO', 'H', 'W 3–1', 'W'], ['NEW', 'A', 'W 3–1', 'W']]
+      .map((r, i) => r.concat([notes[i]]));
+    return {
+      num: rec.num, name: rec.name, nation: rec.nation, age: rec.age, role: roleLabel,
+      status: rec.status, statusFg: rec.statusFg, statusBg: rec.statusBg,
+      contract: 'Contracted to June ' + (2029 + (rec.num % 3)),
+      foot: rec.num % 2 ? 'Left foot' : 'Right foot',
+      height: 178 + (rec.num % 16) + ' cm',
+      joined: 'Joined ' + (2018 + (rec.num % 7)),
+      headline: key === 'GK' ? [
+        { label: 'APPEARANCES', value: rec.apps, sub: 'all competitions' },
+        { label: 'CLEAN SHEETS', value: sheets, sub: pct(Math.round((sheets / Math.max(1, rec.apps)) * 100)) + ' of matches' },
+        { label: 'SAVES', value: saves, sub: (saves / Math.max(1, rec.apps)).toFixed(1) + ' per match' },
+        { label: 'MINUTES', value: mins, sub: Math.round(mins / Math.max(1, rec.apps)) + ' per start' }
+      ] : [
+        { label: 'APPEARANCES', value: rec.apps, sub: 'all competitions' },
+        { label: 'GOALS', value: rec.goals, sub: rec.goals ? Math.round(mins / rec.goals) + ' mins per goal' : 'no goals this season' },
+        { label: 'ASSISTS', value: rec.assists, sub: chances + ' chances created' },
+        { label: 'MINUTES', value: mins, sub: Math.round(mins / Math.max(1, rec.apps)) + ' per start' }
+      ],
+      metrics: key === 'GK' ? [
+        { label: 'Save percentage', value: pct(70 + (rec.num % 12)), of: saves + ' saves made', bar: pct(70 + (rec.num % 12)) },
+        { label: 'Clean sheet rate', value: pct(Math.round((sheets / Math.max(1, rec.apps)) * 100)), of: sheets + ' of ' + rec.apps + ' matches', bar: pct(Math.round((sheets / Math.max(1, rec.apps)) * 100)) },
+        { label: 'Pass accuracy', value: pct(pass), of: (rec.apps * 28) + ' passes', bar: pct(pass) },
+        { label: 'Long-ball accuracy', value: pct(52 + (rec.num % 14)), of: 'league avg 46%', bar: pct(52 + (rec.num % 14)) }
+      ] : key === 'DEF' ? [
+        { label: 'Duels won', value: pct(duels), of: 'aerial ' + pct(duels + 8), bar: pct(duels) },
+        { label: 'Pass accuracy', value: pct(pass + 4), of: (rec.apps * 42) + ' passes', bar: pct(pass + 4) },
+        { label: 'Interceptions per 90', value: (1.2 + (rec.num % 7) / 10).toFixed(1), of: 'league avg 1.1', bar: pct(58 + (rec.num % 16)) },
+        { label: 'Clearances per 90', value: (2.4 + (rec.num % 9) / 10).toFixed(1), of: 'blocks 0.7 per 90', bar: pct(52 + (rec.num % 18)) }
+      ] : key === 'MID' ? [
+        { label: 'Pass accuracy', value: pct(pass + 6), of: (rec.apps * 55) + ' passes', bar: pct(pass + 6) },
+        { label: 'Chances created', value: chances, of: (chances / Math.max(1, rec.apps)).toFixed(1) + ' per match', bar: pct(40 + chances * 3) },
+        { label: 'Progressive carries per 90', value: (3.1 + (rec.num % 8) / 10).toFixed(1), of: 'league avg 2.4', bar: pct(56 + (rec.num % 20)) },
+        { label: 'Duels won', value: pct(duels), of: 'recoveries 6.2 per 90', bar: pct(duels) }
+      ] : [
+        { label: 'Shots on target', value: Math.round(shots * 0.58), of: shots + ' shots', bar: '58%' },
+        { label: 'Conversion rate', value: pct(Math.round((rec.goals / shots) * 100)), of: 'league avg 14%', bar: pct(Math.round((rec.goals / shots) * 100)) },
+        { label: 'Pass accuracy', value: pct(pass), of: (rec.apps * 24) + ' passes', bar: pct(pass) },
+        { label: 'Duels won', value: pct(duels), of: 'aerial ' + pct(duels + 12), bar: pct(duels) }
+      ],
+      comps,
+      form: formRaw.map(r => ({
+        code: r[0], venue: r[1], score: r[2], fg: tone[r[3]], note: r[4],
+        venueTip: r[1] === 'H' ? 'Home fixture' : 'Away fixture',
+        open: () => this.openClub(this.clubFromCode(r[0]))
+      })),
+      news: unavail ? [
+        { kicker: 'SQUAD NEWS', source: 'mancity.com', time: '5h ago', slot: 'training photo 16:10', isVideo: false, title: rec.name + ' steps up ' + issue + ' recovery with 60 minutes for the EDS' },
+        { kicker: 'CITY+', source: 'City+', time: '1d ago', slot: 'video still 16:10', isVideo: true, duration: '04:38', title: 'Rehab diary: inside ' + rec.name + '’s road back' },
+        { kicker: 'ANALYSIS', source: 'The Athletic', time: '2d ago', slot: 'feature photo', isVideo: false, title: 'What City have missed with ' + rec.name + ' out — and when he is due back' }
+      ] : [
+        {
+          kicker: 'MATCH REPORT', source: 'mancity.com', time: '4h ago', slot: 'match photo 16:10', isVideo: false,
+          title: key === 'GK' ? rec.name + ' keeps clean sheet number ' + sheets + ' as City see out Wolves'
+            : key === 'DEF' ? rec.name + ' anchors a back line that has conceded once in five'
+            : key === 'MID' ? rec.name + ' sets the tempo as City take control after the break'
+            : rec.goals > 6 ? rec.name + ' at the double as City sweep aside Wolves'
+            : rec.name + ' on the scoresheet as City ease past Wolves'
+        },
+        {
+          kicker: 'CITY+', source: 'City+', time: '6h ago', slot: 'video still 16:10', isVideo: true, duration: '06:12',
+          title: (key === 'GK' ? 'Every save: ' : 'Every touch: ') + rec.name + ' against Wolves'
+        },
+        {
+          kicker: 'ANALYSIS', source: 'The Athletic', time: '1d ago', slot: 'feature photo', isVideo: false,
+          title: key === 'GK' ? 'How ' + rec.name + ' still starts the build-up from his own box'
+            : key === 'DEF' ? 'The quiet case for ' + rec.name + ' as City’s most complete defender'
+            : key === 'MID' ? 'Why ' + rec.name + ' has become the pivot Pep builds around'
+            : 'Why ' + rec.name + ' is Pep’s reference point in the final third'
+        }
+      ],
+      related: this.relatedPlayers(name, dark)
+    };
+  }
+
+  relatedPlayers(name, dark) {
+    const flat = [];
+    this.squadData(dark).forEach(g => g.players.forEach(p => flat.push(p)));
+    return flat.filter(p => p.name !== name).sort((a, b) => b.goals - a.goals).slice(0, 4).map(p => ({
+      num: p.num, name: p.name, nation: p.nation, goals: p.goals + ' goals',
+      open: () => this.openPlayer(p.name)
+    }));
+  }
+
+  timeline() {
+    if (this._tl) return this._tl;
+    const DAY = 86400000;
+    const base = Date.now();
+    const zone = 'Australia/Sydney';
+    const parts = ts => new Intl.DateTimeFormat('en-CA', { timeZone: zone, year: 'numeric', month: '2-digit', day: '2-digit' })
+      .formatToParts(new Date(ts)).reduce((a, p) => (a[p.type] = p.value, a), {});
+    const tzHours = ts => {
+      const s = new Intl.DateTimeFormat('en-AU', { timeZone: zone, timeZoneName: 'shortOffset' }).format(new Date(ts));
+      const m = s.match(/GMT([+-]\d+)/);
+      return m ? parseInt(m[1], 10) : 10;
+    };
+    const at = (off, time) => {
+      const p = parts(base + off * DAY);
+      const [hh, mm] = String(time || '00:00').split(':').map(Number);
+      const noon = Date.UTC(+p.year, +p.month - 1, +p.day, 2);
+      return Date.UTC(+p.year, +p.month - 1, +p.day, hh - tzHours(noon), mm);
+    };
+    const fmt = (ts, o) => new Intl.DateTimeFormat('en-AU', Object.assign({ timeZone: zone }, o)).format(new Date(ts));
+    const M3 = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+    const mon3 = ts => M3[+parts(ts).month - 1];
+    const club = {
+      AVL: ['#95BFE5', '#670E36'], TOT: ['#132257', '#fff'], RMA: ['#FFC659', '#1C2C5B'],
+      EVE: ['#003399', '#fff'], ARS: ['#EC3325', '#fff'], WOL: ['#FDB913', '#231F20'],
+      BRE: ['#E30613', '#fff'], LIV: ['#C8102E', '#fff'], NEW: ['#241F20', '#fff'],
+      CHE: ['#034694', '#fff'], SPO: ['#2FA46A', '#fff'], INT: ['#0B1560', '#fff'],
+      BAY: ['#DC052D', '#fff'], WAT: ['#FBEE23', '#231F20'], BHA: ['#0057B8', '#fff'],
+      FUL: ['#E9EEF5', '#111'], PSV: ['#EE2223', '#fff'], FEY: ['#D4121A', '#fff'], SLA: ['#D7141A', '#fff']
+    };
+    /* offset in days from today · authored kickoff · everything else derived */
+    const rows = [
+      { off: -60, time: '07:00', opp: 'Bayern München', code: 'BAY', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'H', ground: 'Etihad Stadium', score: '1 – 2', tone: 'L' },
+      { off: -53, time: '07:00', opp: 'Slavia Praha', code: 'SLA', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'A', ground: 'Eden Aréna', score: '2 – 0', tone: 'W' },
+      { off: -46, time: '06:00', opp: 'Brighton', code: 'BHA', comp: 'LEAGUE CUP R4', short: 'League Cup', v: 'A', ground: 'Amex Stadium', score: '2 – 1', tone: 'W' },
+      { off: -39, time: '07:00', opp: 'Feyenoord', code: 'FEY', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'H', ground: 'Etihad Stadium', score: '4 – 1', tone: 'W' },
+      { off: -32, time: '02:30', opp: 'Chelsea', code: 'CHE', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium', score: '2 – 0', tone: 'W' },
+      { off: -29, time: '07:00', opp: 'Inter', code: 'INT', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'A', ground: 'San Siro', score: '1 – 1', tone: 'D' },
+      { off: -25, time: '03:00', opp: 'Newcastle', code: 'NEW', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'A', ground: "St James' Park", score: '3 – 1', tone: 'W' },
+      { off: -18, time: '02:30', opp: 'Liverpool', code: 'LIV', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium', score: '1 – 1', tone: 'D' },
+      { off: -15, time: '07:00', opp: 'Sporting CP', code: 'SPO', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'H', ground: 'Etihad Stadium', score: '3 – 1', tone: 'W' },
+      { off: -11, time: '01:00', opp: 'Brentford', code: 'BRE', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'A', ground: 'Gtech Community', score: '2 – 1', tone: 'W' },
+      { off: -4, time: '02:30', opp: 'Wolves', code: 'WOL', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium', score: '4 – 0', tone: 'W' },
+      { off: 6, time: '02:30', opp: 'Arsenal', code: 'ARS', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium', round: 'MATCHWEEK 13', tv: 'Stan Sport' },
+      { off: 10, time: '07:00', opp: 'Inter', code: 'INT', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'A', ground: 'San Siro' },
+      { off: 13, time: '03:00', opp: 'Fulham', code: 'FUL', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'A', ground: 'Craven Cottage' },
+      { off: 17, time: '06:30', opp: 'Tottenham Hotspur', code: 'TOT', comp: 'LEAGUE CUP QF', short: 'League Cup QF', v: 'H', ground: 'Etihad Stadium' },
+      { off: 24, time: '07:00', opp: 'Real Madrid', code: 'RMA', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'A', ground: 'Santiago Bernabéu' },
+      { off: 28, time: '01:00', opp: 'Everton', code: 'EVE', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'A', ground: 'Hill Dickinson' },
+      { off: 35, time: '05:00', opp: 'Newcastle', code: 'NEW', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium' },
+      { off: 42, time: '03:30', opp: 'Brighton', code: 'BHA', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'A', ground: 'Amex Stadium' },
+      { off: 49, time: '04:30', opp: 'Chelsea', code: 'CHE', comp: 'PREMIER LEAGUE', short: 'Premier League', v: 'H', ground: 'Etihad Stadium' },
+      { off: 53, time: '07:00', opp: 'PSV', code: 'PSV', comp: 'CHAMPIONS LEAGUE', short: 'Champions League', v: 'H', ground: 'Etihad Stadium' }
+    ].map(r => {
+      const ts = at(r.off, r.time);
+      const badge = club[r.code] || ['#6CABDD', '#1C2C5B'];
+      return Object.assign({}, r, {
+        ts, isResult: !!r.score, isFixture: !r.score,
+        bg: badge[0], fg: badge[1],
+        dayLabel: fmt(ts, { weekday: 'short', day: '2-digit' }).toUpperCase().replace(',', ''),
+        shortLabel: fmt(ts, { day: 'numeric' }) + ' ' + mon3(ts),
+        longLabel: fmt(ts, { weekday: 'long', day: 'numeric', month: 'long' }),
+        listLabel: fmt(ts, { weekday: 'short', day: '2-digit' }).toUpperCase().replace(',', '') + ' ' + mon3(ts),
+        monthLabel: fmt(ts, { month: 'long', year: 'numeric' }).toUpperCase()
+      });
+    });
+    this._tl = { rows, results: rows.filter(r => r.isResult), fixtures: rows.filter(r => r.isFixture) };
+    return this._tl;
+  }
+
+  recentIn(comp, n) {
+    return this.timeline().results.filter(r => r.comp === comp).slice(-n).reverse().map(r => ({
+      date: r.shortLabel, venue: r.v, opponent: r.opp, score: r.score.replace(' – ', '–'), tone: r.tone
+    }));
+  }
+
+  seasonData(dark) {
+    const tone = { W: '#2FA46A', D: dark ? '#B9CCE6' : '#42537A', L: '#EC3325' };
+    const months = [];
+    this.timeline().rows.forEach(r => {
+      let g = months.find(m => m.month === r.monthLabel);
+      if (!g) { months.push(g = { month: r.monthLabel, matches: [], played: 0, toPlay: 0 }); }
+      g.played += r.isResult ? 1 : 0;
+      g.toPlay += r.isFixture ? 1 : 0;
+      g.matches.push({
+        date: r.dayLabel, code: r.code, opponent: r.opp, comp: r.comp, ground: r.ground,
+        venue: r.v, bg: r.bg, fg: r.fg, isResult: r.isResult, isFixture: r.isFixture,
+        score: r.score || '', time: r.time, toneFg: r.tone ? tone[r.tone] : 'var(--ink)',
+        venueTip: r.v === 'H' ? 'Home fixture' : r.v === 'A' ? 'Away fixture' : 'Neutral venue',
+        open: () => this.openClub(r.opp)
+      });
+    });
+    return months.map(m => Object.assign(m, {
+      note: [m.played ? m.played + ' played' : '', m.toPlay ? m.toPlay + ' to play' : ''].filter(Boolean).join(' · ')
+    }));
+  }
+  squadData(dark) {
+    const S = {
+      fit: { label: 'AVAILABLE', fg: '#2FA46A', bg: dark ? 'rgba(47,164,106,.16)' : '#E4F5EC' },
+      doubt: { label: 'DOUBTFUL', fg: dark ? '#FFC659' : '#9A7414', bg: dark ? 'rgba(255,198,89,.16)' : '#FBF1DA' },
+      out: { label: 'INJURED', fg: '#EC3325', bg: dark ? 'rgba(236,51,37,.16)' : '#FCE8E6' }
+    };
+    const P = (num, name, nation, age, apps, goals, assists, st) => Object.assign(
+      { num, name, nation, age, apps, goals, assists }, { status: S[st].label, statusFg: S[st].fg, statusBg: S[st].bg }
+    );
+    return [
+      { group: 'GOALKEEPERS', players: [P(31, 'Ederson', 'BRA', 32, 12, 0, 0, 'fit'), P(18, 'Stefan Ortega', 'GER', 33, 4, 0, 0, 'fit')] },
+      {
+        group: 'DEFENDERS', players: [
+          P(2, 'Kyle Walker', 'ENG', 35, 9, 0, 1, 'fit'), P(5, 'John Stones', 'ENG', 31, 6, 1, 0, 'out'),
+          P(6, 'Nathan Aké', 'NED', 30, 8, 0, 1, 'doubt'), P(3, 'Rúben Dias', 'POR', 28, 14, 1, 0, 'fit'),
+          P(24, 'Joško Gvardiol', 'CRO', 23, 15, 2, 3, 'fit'), P(21, 'Rico Lewis', 'ENG', 21, 10, 0, 2, 'fit')
+        ]
+      },
+      {
+        group: 'MIDFIELDERS', players: [
+          P(16, 'Rodri', 'ESP', 29, 3, 0, 1, 'out'), P(20, 'Bernardo Silva', 'POR', 31, 15, 3, 5, 'fit'),
+          P(8, 'Mateo Kovačić', 'CRO', 31, 11, 2, 2, 'fit'), P(47, 'Phil Foden', 'ENG', 25, 14, 9, 6, 'fit'),
+          P(19, 'Nico González', 'ESP', 23, 12, 1, 2, 'fit'), P(82, 'Rayan Cherki', 'FRA', 22, 9, 3, 4, 'fit')
+        ]
+      },
+      {
+        group: 'FORWARDS', players: [
+          P(9, 'Erling Haaland', 'NOR', 25, 16, 18, 3, 'fit'), P(26, 'Savinho', 'BRA', 21, 14, 6, 7, 'fit'),
+          P(11, 'Jérémy Doku', 'BEL', 23, 13, 5, 6, 'fit'), P(7, 'Omar Marmoush', 'EGY', 26, 12, 7, 2, 'fit')
+        ]
+      }
+    ];
+  }
+
+  plFull(dark) {
+    /* club, played, gd, pts, form, W, D, L, GF — pts = 3W+D, W+D+L = played, GA = GF - GD */
+    const raw = [
+      ['Arsenal', 12, '+18', 30, 'WWDWW', 9, 3, 0, 26], ['Manchester City', 12, '+21', 28, 'WWDWW', 9, 1, 2, 31],
+      ['Liverpool', 12, '+12', 25, 'DWLWW', 7, 4, 1, 24], ['Chelsea', 12, '+7', 22, 'WLWDW', 6, 4, 2, 21],
+      ['Aston Villa', 12, '+5', 21, 'LWWDW', 6, 3, 3, 18], ['Newcastle', 12, '+4', 19, 'WDLWD', 5, 4, 3, 17],
+      ['Tottenham', 12, '+3', 18, 'LWDWL', 5, 3, 4, 18], ['Brighton', 12, '0', 17, 'DDWLW', 4, 5, 3, 16],
+      ['Nottingham Forest', 12, '-1', 16, 'WLDLW', 4, 4, 4, 14], ['Bournemouth', 12, '-2', 15, 'LWLDD', 4, 3, 5, 15],
+      ['Fulham', 12, '-3', 14, 'DLWLD', 3, 5, 4, 13], ['West Ham', 12, '-4', 14, 'WLLDW', 4, 2, 6, 14],
+      ['Everton', 12, '-4', 13, 'DLWDL', 3, 4, 5, 12], ['Crystal Palace', 12, '-5', 13, 'LDWLD', 3, 4, 5, 11],
+      ['Manchester United', 12, '-6', 12, 'LWLDL', 3, 3, 6, 13], ['Wolves', 12, '-8', 11, 'LDLWL', 2, 5, 5, 10],
+      ['Leeds United', 12, '-10', 10, 'DLLWL', 2, 4, 6, 9], ['Burnley', 12, '-13', 9, 'LLDLW', 2, 3, 7, 8],
+      ['Sunderland', 12, '-15', 8, 'LLDLL', 2, 2, 8, 7], ['Ipswich Town', 12, '-19', 6, 'LLLDL', 1, 3, 8, 6]
+    ];
+    return raw.map((r, i) => {
+      const pos = i + 1;
+      const zone = pos <= 4 ? '#6CABDD' : pos <= 6 ? (dark ? '#FFC659' : '#D4A12A') : pos >= 18 ? '#EC3325' : 'transparent';
+      const city = r[0] === 'Manchester City';
+      const zoneTip = pos <= 4 ? 'Champions League places' : pos <= 6 ? 'Europa League places' : pos >= 18 ? 'Relegation zone' : '';
+      return {
+        pos, club: r[0], played: r[1], gd: r[2], pts: r[3], zone, city, zoneTip,
+        w: r[5], d: r[6], l: r[7], gf: r[8], ga: r[8] - (parseInt(r[2], 10) || 0),
+        open: () => this.openClub(r[0]),
+        rowBg: city ? (dark ? 'rgba(108,171,221,.12)' : '#EAF3FB') : 'transparent',
+        weight: city ? 800 : 600,
+        rankFg: city ? '#6CABDD' : (dark ? '#8AA2C6' : '#5D6E90'),
+        form: this.formDots(r[4], dark ? 'dark' : 'light')
+      };
+    });
+  }
+
+  componentDidMount() {
+    this.target = this.timeline().fixtures[0].ts;
+    this.timer = setInterval(() => this.setState({ now: Date.now() }), 1000);
+    this.installUI();
+    this.installHistory();
+  }
+  // One history entry per navigation, so Android's hardware back and the in-page
+  // back button walk the same stack. pushState carries no URL, so the host URL is untouched.
+  installHistory() {
+    if (typeof window === 'undefined' || !window.history || !window.history.pushState) return;
+    this._depth = 0;
+    const s = this.state;
+    try { window.history.replaceState({ cityHub: { page: s.page, player: s.player, club: s.club, fromPage: s.fromPage } }, ''); } catch (e) {}
+    this._pop = e => {
+      const st = e.state && e.state.cityHub;
+      this._depth = Math.max(0, (this._depth || 0) - 1);
+      this.setState(st ? { page: st.page, player: st.player, club: st.club, fromPage: st.fromPage } : { page: 'Overview' });
+      window.scrollTo(0, 0);
+    };
+    window.addEventListener('popstate', this._pop);
+  }
+  nav(patch) {
+    const s = this.state;
+    const pick = k => (patch[k] !== undefined ? patch[k] : s[k]);
+    const next = { page: pick('page'), player: pick('player'), club: pick('club'), fromPage: pick('fromPage') };
+    if (next.page === s.page && next.player === s.player && next.club === s.club) return;
+    this.setState(next);
+    if (typeof window !== 'undefined' && window.history && window.history.pushState) {
+      try { window.history.pushState({ cityHub: next }, ''); this._depth = (this._depth || 0) + 1; } catch (e) {}
+    }
+    if (typeof window !== 'undefined') window.scrollTo(0, 0);
+  }
+  goBack() {
+    if ((this._depth || 0) > 0 && typeof window !== 'undefined') { window.history.back(); return; }
+    this.nav({ page: this.state.fromPage || 'Squad' });
+  }
+  componentWillUnmount() {
+    clearInterval(this.timer);
+    if (this._pop) window.removeEventListener('popstate', this._pop);
+    document.removeEventListener('mouseover', this._over);
+    document.removeEventListener('mouseout', this._out);
+    document.removeEventListener('click', this._click);
+    window.removeEventListener('scroll', this._hide, true);
+    if (this._tip) this._tip.remove();
+    if (this._toastBox) this._toastBox.remove();
+  }
+
+  pad(n) { return String(n).padStart(2, '0'); }
+
+  formDots(str, theme) {
+    const bg = { W: '#2FA46A', D: theme === 'dark' ? '#2C3C6B' : '#C9D5E6', L: '#EC3325' };
+    const tip = { W: 'Win', D: 'Draw', L: 'Defeat' };
+    return str.split('').map(ch => ({
+      ch, bg: bg[ch], tip: tip[ch],
+      fg: ch === 'D' ? (theme === 'dark' ? '#B9CCE6' : '#42537A') : '#fff'
+    }));
+  }
+
+  comps() {
+    return {
+      PL: {
+        label: 'Premier League', updated: 'MATCHWEEK 12', isTable: true, isPath: false,
+        rows: [
+          { pos: 1, club: 'Arsenal', played: 12, gd: '+18', pts: 30, form: 'WWDWW' },
+          { pos: 2, club: 'Manchester City', played: 12, gd: '+21', pts: 28, form: 'WWDWW', city: true },
+          { pos: 3, club: 'Liverpool', played: 12, gd: '+12', pts: 25, form: 'DWLWW' },
+          { pos: 4, club: 'Chelsea', played: 12, gd: '+7', pts: 22, form: 'WLWDW' },
+          { pos: 5, club: 'Aston Villa', played: 12, gd: '+5', pts: 21, form: 'LWWDW' },
+          { pos: 6, club: 'Newcastle', played: 12, gd: '+4', pts: 19, form: 'WDLWD' },
+          { pos: 7, club: 'Tottenham', played: 12, gd: '+3', pts: 18, form: 'LWDWL' },
+          { pos: 8, club: 'Brighton', played: 12, gd: '0', pts: 17, form: 'DDWLW' },
+          { pos: 9, club: 'Nottm Forest', played: 12, gd: '-1', pts: 16, form: 'WLDLW' },
+          { pos: 10, club: 'Bournemouth', played: 12, gd: '-2', pts: 15, form: 'LWLDD' }
+        ],
+        short: 'THE LEAGUE',
+        recent: this.recentIn('PREMIER LEAGUE', 5)
+      },
+      UCL: {
+        label: 'Champions League', updated: 'LEAGUE PHASE · MD5', isTable: true, isPath: false,
+        rows: [
+          { pos: 1, club: 'Bayern München', played: 5, gd: '+11', pts: 13, form: 'WWWDW' },
+          { pos: 2, club: 'Manchester City', played: 5, gd: '+9', pts: 11, form: 'WDWWD', city: true },
+          { pos: 3, club: 'Real Madrid', played: 5, gd: '+6', pts: 10, form: 'WWDLW' },
+          { pos: 4, club: 'Inter', played: 5, gd: '+5', pts: 10, form: 'DWWLW' },
+          { pos: 5, club: 'Sporting CP', played: 5, gd: '+3', pts: 9, form: 'WLWDW' },
+          { pos: 6, club: 'Arsenal', played: 5, gd: '+4', pts: 9, form: 'WWLDW' },
+          { pos: 7, club: 'Atlético Madrid', played: 5, gd: '+2', pts: 8, form: 'DWLWD' },
+          { pos: 8, club: 'PSV', played: 5, gd: '0', pts: 7, form: 'WDLDW' }
+        ],
+        short: 'EUROPE',
+        recent: this.recentIn('CHAMPIONS LEAGUE', 5)
+      },
+      FA: {
+        label: 'FA Cup', updated: 'ROUND 5 · DRAW PENDING', isTable: false, isPath: true,
+        path: [
+          { round: 'ROUND 3', opponent: 'Luton Town', venue: 'AWAY', result: 'W 3–0', tone: 'win' },
+          { round: 'ROUND 4', opponent: 'Everton', venue: 'HOME', result: 'W 2–1', tone: 'win' },
+          { round: 'ROUND 5', opponent: 'Draw on 9 Feb', venue: 'TBC', result: 'PENDING', tone: 'pending' }
+        ],
+        short: 'THE FA CUP',
+        recent: [
+          { date: '2025', venue: 'F', opponent: 'Crystal Palace', score: '0–1', tone: 'L' },
+          { date: '2025', venue: 'SF', opponent: 'Nottm Forest', score: '2–0', tone: 'W' },
+          { date: '2025', venue: 'QF', opponent: 'Bournemouth', score: '2–1', tone: 'W' },
+          { date: '2025', venue: 'R5', opponent: 'Plymouth', score: '3–1', tone: 'W' },
+          { date: '2025', venue: 'R4', opponent: 'Leyton Orient', score: '2–1', tone: 'W' }
+        ]
+      },
+      EFL: {
+        label: 'League Cup', updated: 'QUARTER-FINAL', isTable: false, isPath: true,
+        path: [
+          { round: 'ROUND 3', opponent: 'Watford', venue: 'HOME', result: 'W 4–0', tone: 'win' },
+          { round: 'ROUND 4', opponent: 'Brighton', venue: 'AWAY', result: 'W 2–1', tone: 'win' },
+          { round: 'QUARTER-FINAL', opponent: 'Tottenham Hotspur', venue: 'HOME', result: '17 DEC · 06:30', tone: 'next' }
+        ],
+        short: 'THE LEAGUE CUP',
+        recent: [
+          { date: '29 OCT', venue: 'A', opponent: 'Brighton', score: '2–1', tone: 'W' },
+          { date: '24 SEP', venue: 'H', opponent: 'Watford', score: '4–0', tone: 'W' },
+          { date: '2024', venue: 'A', opponent: 'Tottenham', score: '1–2', tone: 'L' },
+          { date: '2024', venue: 'H', opponent: 'Watford', score: '2–1', tone: 'W' },
+          { date: '2023', venue: 'A', opponent: 'Newcastle', score: '0–1', tone: 'L' }
+        ]
+      },
+      CWC: {
+        label: 'Club World Cup', updated: 'GROUP G', isTable: true, isPath: false,
+        rows: [
+          { pos: 1, club: 'Manchester City', played: 3, gd: '+8', pts: 9, form: 'WWW', city: true },
+          { pos: 2, club: 'Juventus', played: 3, gd: '+2', pts: 6, form: 'WLW' },
+          { pos: 3, club: 'Al Ain', played: 3, gd: '-4', pts: 3, form: 'LWL' },
+          { pos: 4, club: 'Wydad AC', played: 3, gd: '-6', pts: 0, form: 'LLL' }
+        ],
+        short: 'THE CLUB WORLD CUP',
+        recent: [
+          { date: 'MD3', venue: 'N', opponent: 'Juventus', score: '5–2', tone: 'W' },
+          { date: 'MD2', venue: 'N', opponent: 'Al Ain', score: '6–0', tone: 'W' },
+          { date: 'MD1', venue: 'N', opponent: 'Wydad AC', score: '2–0', tone: 'W' },
+          { date: 'R16', venue: 'N', opponent: 'Al Hilal', score: '3–4', tone: 'L' },
+          { date: 'PRE', venue: 'H', opponent: 'Palermo', score: '3–0', tone: 'W' }
+        ]
+      }
+    };
+  }
+
+  renderVals() {
+    const theme = this.state.theme || this.props.theme || 'dark';
+    const dark = theme === 'dark';
+    const isLive = (this.props.matchState || 'upcoming') === 'live';
+    const page = this.state.page;
+    const name = this.props.supporterName || 'Alec';
+
+    const nextUp = this.timeline().fixtures[0];
+    const target = nextUp.ts;
+    let diff = Math.max(0, target - this.state.now);
+    const d = Math.floor(diff / 86400000);
+    const h = Math.floor(diff / 3600000) % 24;
+    const m = Math.floor(diff / 60000) % 60;
+    const s = Math.floor(diff / 1000) % 60;
+
+
+    const compsAll = this.comps();
+    const key = this.state.comp;
+    const active = compsAll[key];
+
+    const rowCityBg = dark ? 'rgba(108,171,221,.12)' : '#EAF3FB';
+    const resFg = { W: '#2FA46A', D: dark ? '#B9CCE6' : '#42537A', L: '#EC3325' };
+    const comp = {
+      updated: active.updated,
+      shortLabel: active.short,
+      recent: (active.recent || []).map(g => ({
+        date: g.date, venue: g.venue, opponent: g.opponent, score: g.score, fg: resFg[g.tone],
+        open: () => this.openClub(g.opponent)
+      })),
+      isTable: !!active.isTable,
+      isPath: !!active.isPath,
+      rows: (active.rows || []).map(r => ({
+        pos: r.pos, club: r.club, played: r.played, gd: r.gd, pts: r.pts,
+        rowBg: r.city ? rowCityBg : 'transparent',
+        mark: r.city ? '#6CABDD' : 'transparent',
+        zoneTip: r.city ? 'Your club' : '',
+        rankFg: r.city ? '#6CABDD' : (dark ? '#8AA2C6' : '#5D6E90'),
+        nameFg: 'inherit',
+        weight: r.city ? 800 : 600,
+        open: () => this.openClub(r.club),
+        form: this.formDots(r.form, theme)
+      })),
+      path: (active.path || []).map(p => {
+        const tones = {
+          win: { bg: dark ? 'rgba(47,164,106,.18)' : '#E4F5EC', fg: '#2FA46A' },
+          pending: { bg: dark ? 'rgba(138,162,198,.14)' : '#EDF1F7', fg: dark ? '#8AA2C6' : '#5D6E90' },
+          next: { bg: dark ? 'rgba(255,198,89,.16)' : '#FBF1DA', fg: dark ? '#FFC659' : '#9A7414' }
+        }[p.tone];
+        return { round: p.round, opponent: p.opponent, venue: p.venue, result: p.result, bg: tones.bg, fg: tones.fg, open: () => this.openClub(p.opponent) };
+      })
+    };
+
+    const tabs = Object.keys(compsAll).map(k => ({
+      label: compsAll[k].label,
+      bg: k === key ? '#6CABDD' : 'transparent',
+      fg: k === key ? '#0E1A38' : (dark ? '#8AA2C6' : '#5D6E90'),
+      bd: k === key ? '#6CABDD' : 'var(--line)',
+      select: () => this.setState({ comp: k })
+    }));
+
+    const news = [
+      { kicker: 'CITY+', isVideo: true, duration: '12:04', title: 'Inside the Etihad: Pep’s full pre-match press conference', source: 'City+', time: '2h ago', slot: 'video still 16:10' },
+      { kicker: 'MATCH REPORT', isVideo: false, title: 'Haaland’s 100th league goal caps a ruthless second half', source: 'mancity.com', time: '4h ago', slot: 'match photo 16:10' },
+      { kicker: 'SQUAD', isVideo: false, title: 'Rodri steps up return with 60 minutes for the EDS', source: 'The Athletic', time: '7h ago', slot: 'training photo' },
+      { kicker: 'HIGHLIGHTS', isVideo: true, duration: '03:41', title: 'Every angle: Foden’s strike from twenty-five yards', source: 'City+', time: '9h ago', slot: 'video still 16:10' }
+    ];
+
+    const scorers = [
+      { num: 9, name: 'Erling Haaland', pos: 'ST', goals: 18, bar: '100%' },
+      { num: 47, name: 'Phil Foden', pos: 'AM', goals: 9, bar: '50%' },
+      { num: 26, name: 'Savinho', pos: 'RW', goals: 6, bar: '34%' },
+      { num: 11, name: 'Jérémy Doku', pos: 'LW', goals: 5, bar: '28%' }
+    ];
+
+    const injuries = [
+      { name: 'Rodri', issue: 'Knee · back in team training', back: 'LATE DEC', tone: dark ? '#FFC659' : '#D4A12A' },
+      { name: 'John Stones', issue: 'Hamstring · rehab', back: '2 WEEKS', tone: '#EC3325' },
+      { name: 'Nathan Aké', issue: 'Calf · assessed daily', back: 'DOUBTFUL', tone: dark ? '#8AA2C6' : '#5D6E90' }
+    ];
+
+    const transfers = [
+      { tag: 'HERE WE GO', bg: dark ? 'rgba(47,164,106,.18)' : '#E4F5EC', fg: '#2FA46A', source: 'Fabrizio Romano', time: '3h ago', text: 'City close on a pre-contract for a 19-year-old Brazilian left-back; medical pencilled in for January.' },
+      { tag: 'RUMOUR', bg: dark ? 'rgba(108,171,221,.16)' : '#EAF3FB', fg: dark ? '#8CC3EC' : '#2B7AB8', source: 'Sky Sports', time: '1d ago', text: 'Club open talks over new terms for Ederson as the goalkeeper enters the final eighteen months of his deal.' }
+    ];
+
+    const openC = n => () => this.openClub(n);
+    const fixtures = this.timeline().fixtures.slice(0, 4).map(r => ({
+      code: r.code, opponent: r.opp, comp: r.short, venue: r.v === 'H' ? 'Etihad' : r.ground,
+      time: r.time, date: r.listLabel, bg: r.bg, fg: r.fg, open: openC(r.opp)
+    }));
+
+    const kickTime = nextUp.time;
+    const kickDate = nextUp.longLabel;
+
+    return {
+      theme, isLive, isUpcoming: !isLive,
+      greeting: 'GOOD EVENING, ' + String(name).toUpperCase(),
+      dateLabel: new Intl.DateTimeFormat('en-AU', { weekday: 'short', day: 'numeric', month: 'short', timeZone: 'Australia/Sydney' }).format(new Date()).toUpperCase(),
+      ui: {
+        lightBg: dark ? 'transparent' : '#6CABDD',
+        lightFg: dark ? '#8AA2C6' : '#0E1A38',
+        darkBg: dark ? '#6CABDD' : 'transparent',
+        darkFg: dark ? '#0E1A38' : '#5D6E90'
+      },
+      setLight: () => this.setState({ theme: 'light' }),
+      setDark: () => this.setState({ theme: 'dark' }),
+      cd: { d: this.pad(d), h: this.pad(h), m: this.pad(m), s: this.pad(s) },
+      next: {
+        comp: nextUp.comp, round: nextUp.round || 'NEXT FIXTURE', opponent: nextUp.opp, oppCode: nextUp.code,
+        oppBg: nextUp.bg, oppFg: nextUp.fg, venue: nextUp.ground, broadcast: nextUp.tv || 'Stan Sport',
+        openOpp: openC(nextUp.opp), openSelf: openC('Manchester City'),
+        kickTime, kickDate,
+        tickerLine: nextUp.opp + ' (' + nextUp.v + ') · ' + nextUp.short + ' · ' + kickDate + ' ' + kickTime + ' AEST'
+      },
+      live: {
+        score: '2 – 1', oppCode: 'ARS', minute: "67'", comp: 'PREMIER LEAGUE · ETIHAD',
+        openMci: openC('Manchester City'), openOpp: openC('Arsenal'),
+        scorers: [
+          { text: '⚽ Haaland 14′', open: () => this.openPlayer('Erling Haaland'), cursor: 'pointer' },
+          { text: '⚽ Foden 38′', open: () => this.openPlayer('Phil Foden'), cursor: 'pointer' },
+          { text: '⚽ Saka 52′ (ARS)', open: openC('Arsenal'), cursor: 'pointer' }
+        ]
+      },
+      comp, tabs, news, fixtures, transfers,
+      scorers: scorers.map(p => Object.assign({}, p, { open: () => this.openPlayer(p.name) })),
+      injuries: injuries.map(p => Object.assign({}, p, { open: () => this.openPlayer(p.name) })),
+      injuryCount: injuries.length + ' OUT',
+      page,
+      nav: ['Overview', 'Fixtures', 'Squad', 'Tables'].map(p => ({
+        label: p,
+        weight: p === page ? 700 : 600,
+        fg: p === page ? 'var(--ink)' : 'var(--dim)',
+        bd: p === page ? '#6CABDD' : 'transparent',
+        select: () => this.nav({ page: p })
+      })),
+      isOverview: page === 'Overview',
+      isFixtures: page === 'Fixtures',
+      isSquad: page === 'Squad',
+      isTables: page === 'Tables',
+      isPlayer: page === 'Player',
+      isClub: page === 'Club',
+      club: this.clubRecord(this.state.club, dark),
+      openCity: () => this.openClub('Manchester City'),
+      player: this.playerRecord(this.state.player, dark),
+      backLabel: 'Back to ' + (this.state.fromPage || 'Squad'),
+      goBack: () => this.goBack(),
+      seasonMeta: '14 played · 10W 3D 1L',
+      compFilters: ['All', 'Premier League', 'Champions League', 'FA Cup', 'League Cup'].map((c, i) => ({
+        label: c,
+        bg: i === 0 ? '#6CABDD' : 'transparent',
+        fg: i === 0 ? '#0E1A38' : (dark ? '#8AA2C6' : '#5D6E90'),
+        bd: i === 0 ? '#6CABDD' : 'var(--line)'
+      })),
+      months: this.seasonData(dark),
+      squad: this.squadData(dark).map(g => ({
+        group: g.group,
+        players: g.players.map(p => Object.assign({}, p, { open: () => this.openPlayer(p.name) }))
+      })),
+      squadMeta: '18 senior players · avg age 27.1',
+      plTable: this.plFull(dark),
+      otherComps: [
+        { label: 'CHAMPIONS LEAGUE', status: '2nd · league phase', detail: '11 pts from 5 · +9 GD', tone: '#6CABDD' },
+        { label: 'FA CUP', status: 'Into round five', detail: 'Beat Everton 2–1 · draw 9 Feb', tone: dark ? '#FFC659' : '#D4A12A' },
+        { label: 'LEAGUE CUP', status: 'Quarter-final', detail: 'Tottenham (H) · 17 Dec', tone: dark ? '#FFC659' : '#D4A12A' },
+        { label: 'CLUB WORLD CUP', status: 'Group G winners', detail: '9 pts from 3 · +8 GD', tone: '#2FA46A' }
+      ],
+      zones: [
+        { label: 'Champions League', color: '#6CABDD' },
+        { label: 'Europa League', color: dark ? '#FFC659' : '#D4A12A' },
+        { label: 'Relegation', color: '#EC3325' }
+      ]
+    };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;padding:0;background:#0B1020;}
+  *{box-sizing:border-box;}
+  a{color:#8CC3EC;text-decoration:none;}
+  a:hover{color:#6CABDD;}
+  button{transition:background .14s ease,color .14s ease,border-color .14s ease,transform .1s ease;-webkit-tap-highlight-color:transparent;}
+  button:active{transform:translateY(1px) scale(.99);}
+  :focus-visible{outline:2px solid #6CABDD;outline-offset:2px;}
+</style>
+</helmet>
+
+<div style="min-height:100vh;background:#0B1020;color:#E9F1FA;font-family:Archivo,Helvetica,sans-serif;padding:26px 28px 40px;-webkit-font-smoothing:antialiased">
+
+  <div style="display:flex;align-items:flex-end;gap:24px;flex-wrap:wrap;margin-bottom:24px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <span style="font-size:11px;font-weight:800;letter-spacing:.16em;color:#6CABDD">CITY HUB · DEVICE HARNESS</span>
+      <span style="font-size:19px;font-weight:800;letter-spacing:-.01em">Mobile preview</span>
+    </div>
+
+    <div style="display:flex;gap:6px;padding:4px;background:#141F42;border:1px solid rgba(108,171,221,.18);border-radius:999px">
+      <sc-for list="{{ devices }}" as="d" hint-placeholder-count="3">
+        <button onClick="{{ d.select }}" style="border:0;cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.03em;height:36px;padding:0 16px;border-radius:999px;background:{{ d.bg }};color:{{ d.fg }}">{{ d.label }}</button>
+      </sc-for>
+    </div>
+
+    <div style="margin-left:auto;display:flex;align-items:center;gap:10px">
+      <button onClick="{{ reload }}" style="border:1px solid rgba(108,171,221,.28);background:none;cursor:pointer;font-family:Archivo,sans-serif;font-size:12px;font-weight:700;letter-spacing:.03em;color:#8AA2C6;height:36px;padding:0 16px;border-radius:8px">Reload</button>
+      <a href="City Hub.dc.html" style="font-size:12px;font-weight:700;letter-spacing:.03em">Open full size →</a>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:32px;align-items:flex-start;flex-wrap:wrap">
+
+    <div style="display:flex;flex-direction:column;gap:12px;flex:none">
+      <span style="font-size:10.5px;font-weight:800;letter-spacing:.14em;color:#5D6E90">{{ dev.name }} · {{ dev.w }} × {{ dev.h }}</span>
+      <div style="padding:10px;background:#161B2B;border:1px solid rgba(108,171,221,.16);border-radius:30px;box-shadow:0 30px 70px rgba(0,0,0,.55)">
+        <div style="position:relative;width:{{ dev.wpx }};border-radius:22px;overflow:hidden;background:#000">
+          <iframe key="{{ frameKey }}" ref="{{ frameRef }}" src="City Hub.dc.html" title="City Hub mobile" style="display:block;width:100%;height:{{ dev.hpx }};border:0;background:#070D22"></iframe>
+          <div style="display:flex;align-items:center;justify-content:center;gap:56px;height:44px;background:#05091A;border-top:1px solid rgba(108,171,221,.14)">
+            <button onClick="{{ back }}" aria-label="Back" style="width:56px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:#8AA2C6">
+              <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor"><path d="M15.5 4 7 12l8.5 8z"></path></svg>
+            </button>
+            <button onClick="{{ home }}" aria-label="Home" style="width:56px;height:36px;display:flex;align-items:center;justify-content:center;background:none;border:0;cursor:pointer;color:#8AA2C6">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="8"></circle></svg>
+            </button>
+            <span style="width:56px;height:36px;display:flex;align-items:center;justify-content:center;color:#3D4A6B">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" strokeWidth="2"><rect x="5" y="5" width="14" height="14" rx="2"></rect></svg>
+            </span>
+          </div>
+        </div>
+      </div>
+      <span style="font-size:11px;font-weight:600;color:#5D6E90;max-width:{{ dev.wpx }};line-height:1.45;text-wrap:pretty">The ◀ button is wired to the frame's history — it behaves exactly as Android's hardware back does.</span>
+    </div>
+
+    <div style="flex:1;min-width:260px;max-width:420px;display:flex;flex-direction:column;gap:16px">
+      <div style="background:#0F1A3C;border:1px solid rgba(108,171,221,.16);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:14px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">WHAT TO CHECK</span>
+        <sc-for list="{{ checks }}" as="c" hint-placeholder-count="6">
+          <div style="display:flex;gap:12px;align-items:flex-start">
+            <span style="width:20px;flex:none;font-size:11px;font-weight:800;letter-spacing:.06em;color:#6CABDD;line-height:1.5">{{ c.n }}</span>
+            <span style="font-size:12.5px;font-weight:600;line-height:1.5;color:#B8C8E0;text-wrap:pretty">{{ c.text }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="background:#0F1A3C;border:1px solid rgba(108,171,221,.16);border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:10px">
+        <span style="font-size:13px;font-weight:800;letter-spacing:.06em">BREAKPOINTS</span>
+        <sc-for list="{{ bps }}" as="b" hint-placeholder-count="3">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(108,171,221,.12)">
+            <span style="font-size:12.5px;font-weight:700;width:104px;flex:none;color:#8CC3EC">{{ b.range }}</span>
+            <span style="font-size:12px;font-weight:600;color:#8AA2C6;line-height:1.4">{{ b.what }}</span>
+          </div>
+        </sc-for>
+        <span style="font-size:11.5px;font-weight:600;color:#5D6E90;line-height:1.5;padding-top:4px;text-wrap:pretty">Dragging the preview pane narrower than 860px switches the real page over too — the frame above is only needed for the back button.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1080,&quot;height&quot;:1060}}">
+class Component extends DCLogic {
+  state = { device: 0, frameKey: 0 };
+
+  devices() {
+    return [
+      { name: 'Pixel 8', w: 412, h: 870 },
+      { name: 'iPhone 15', w: 390, h: 844 },
+      { name: 'iPad mini', w: 768, h: 900 }
+    ];
+  }
+
+  frameWin() {
+    return this._frame && this._frame.contentWindow;
+  }
+
+  renderVals() {
+    const list = this.devices();
+    const dev = list[this.state.device] || list[0];
+    return {
+      frameKey: 'f' + this.state.device + '-' + this.state.frameKey,
+      frameRef: el => { this._frame = el; },
+      // Width is what drives the breakpoints; height is cosmetic, so cap it to the
+      // pane so the Android nav bar (and its back button) is always reachable.
+      dev: {
+        name: dev.name, w: dev.w, h: dev.h, wpx: dev.w + 'px',
+        hpx: 'min(' + dev.h + 'px, max(380px, calc(100vh - 215px)))'
+      },
+      devices: list.map((d, i) => ({
+        label: d.name + ' · ' + d.w,
+        bg: i === this.state.device ? '#6CABDD' : 'transparent',
+        fg: i === this.state.device ? '#0E1A38' : '#8AA2C6',
+        select: () => this.setState({ device: i })
+      })),
+      back: () => { const w = this.frameWin(); if (w) w.history.back(); },
+      home: () => this.setState(s => ({ frameKey: s.frameKey + 1 })),
+      reload: () => this.setState(s => ({ frameKey: s.frameKey + 1 })),
+      checks: [
+        { n: '01', text: 'Tap the bottom tab bar through Overview, Fixtures, Squad, Tables — 52px targets, sky indicator on the active tab.' },
+        { n: '02', text: 'Open a player from the squad, then a club from their last five, then press ◀ twice — it should retrace Club → Player → Squad, not jump home.' },
+        { n: '03', text: 'Press ◀ on the Overview. Nothing should happen inside the frame; on a real Android device that exits the app.' },
+        { n: '04', text: 'Standings table: # / club / PTS / form only. P and GD are dropped — they are derived and live on the club page.' },
+        { n: '05', text: 'Swipe the "CITY · LAST FIVE" strip and the competition filter chips sideways — both are snap-scrollers, not squeezed grids.' },
+        { n: '06', text: 'Toggle sun/moon in the header. Every mobile rule is geometry only, so both themes should look native, never patched.' },
+        { n: '07', text: 'Scroll each page to the bottom — no horizontal scrollbar at any width, and the tab bar never covers the footer.' }
+      ],
+      bps: [
+        { range: '≤ 560px', what: 'Single column everywhere; card grids go 1-up.' },
+        { range: '561 – 860px', what: 'Still mobile chrome and tab bar, but card grids go 2-up.' },
+        { range: '> 860px', what: 'Desktop: 12-column grid, header nav, full tables.' }
+      ]
+    };
+  }
+}
+
+</script>
+</body>
+</html>
