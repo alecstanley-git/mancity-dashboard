@@ -112,7 +112,7 @@ export default function Player(v) {
       <section style={{ gridColumn: "span 12", marginTop: "6px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
           <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>{player.name} · NEWS &amp; MEDIA</span>
-          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>3 STORIES</span>
+          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{player.news ? `${player.news.length} ${player.news.length === 1 ? "STORY" : "STORIES"}` : "NO STORIES"}</span>
         </div>
         <div data-m="cards1" style={{ display: "grid", gridTemplateColumns: "repeat(3,minmax(0,1fr))", gap: "20px" }}>
           {!player.news && <Missing />}

@@ -70,7 +70,7 @@ export default function Overview(v) {
       <section style={{ gridColumn: "span 4", background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "24px 24px 8px", display: "flex", flexDirection: "column" }} data-m="card">
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
           <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>FIXTURE RAIL</span>
-          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>NEXT 4</span>
+          <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{fixtures ? `NEXT ${fixtures.length}` : "NEXT UP"}</span>
         </div>
         {!fixtures && <Missing />}
         {(fixtures || []).map((f, fI) => (
