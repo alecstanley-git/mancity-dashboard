@@ -44,6 +44,26 @@ that is the rule working, not a regression.
 
 ---
 
+## Keep these docs current
+
+Update `README.md` and this file **as part of the change**, not afterwards. A `Stop` hook
+(`.claude/hooks/docs-reminder.sh`) checks for source edits that left both untouched and asks
+once per change set — it is a backstop, not the mechanism.
+
+What belongs where:
+
+- **`README.md`** — anything a person setting the project up or operating it needs:
+  architecture, commands, deployment, key rotation, and the table of what the provider does
+  and does not supply. Update that table whenever provider coverage changes.
+- **`CLAUDE.md`** — a standing constraint, a decision worth not relitigating, or a trap that
+  cost real time. Not a changelog, and not a summary of the code: only what a fresh session
+  could not work out by reading the repo. If a "Gotchas" entry stops being true, delete it —
+  a stale warning is worse than none.
+
+Neither file needs an entry for an ordinary bug fix or refactor. Say so and move on.
+
+---
+
 ## Architecture
 
 GitHub Pages is static, so the frontend cannot hold a key. The Cloudflare Worker holds the
