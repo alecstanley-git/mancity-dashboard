@@ -300,6 +300,18 @@ export function toSquad(team, scorers = []) {
   return groups.length ? groups : null;
 }
 
+/**
+ * player name -> date of birth, which is the key the other providers join on.
+ * See worker/src/join.js for why it is date of birth and not name.
+ */
+export function toDobs(team) {
+  const squad = team?.squad;
+  if (!squad || !squad.length) return null;
+  const out = {};
+  for (const p of squad) if (p.name && p.dateOfBirth) out[p.name] = String(p.dateOfBirth).slice(0, 10);
+  return Object.keys(out).length ? out : null;
+}
+
 /** City's leading scorers. Returns [] rather than null when nobody has scored. */
 export function toScorers(scorers) {
   if (!scorers) return null;

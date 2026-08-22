@@ -2,7 +2,7 @@ import Missing, { orMissing } from '../components/Missing.jsx';
 import Badge from '../components/Badge.jsx';
 
 export default function Fixtures(v) {
-  const { seasonMeta, compFilters, months, seasonLabel } = v;
+  const { seasonMeta, compFilters, months, seasonLabel, addSeasonToCalendar, seasonCalendarLabel } = v;
   return (
     <main data-m="stack" style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px", display: "flex", flexDirection: "column", gap: "24px" }}>
       <div style={{ display: "flex", alignItems: "flex-end", gap: "20px", flexWrap: "wrap" }}>
@@ -13,11 +13,26 @@ export default function Fixtures(v) {
         <div data-m="chiprow" style={{ marginLeft: "auto", display: "flex", gap: "8px", flexWrap: "wrap" }}>
           {!compFilters && <Missing />}
           {(compFilters || []).map((c, cI) => (
-            <span key={cI} style={{ fontSize: "11.5px", fontWeight: "700", letterSpacing: ".03em", padding: "9px 14px", borderRadius: "8px", cursor: "pointer", background: c.bg, color: c.fg, border: `1px solid ${c.bd}` }}>{c.label}</span>
+            <button key={cI} onClick={c.select} data-m="tap" data-hov="nav" style={{ fontSize: "11.5px", fontWeight: "700", letterSpacing: ".03em", padding: "9px 14px", borderRadius: "8px", cursor: "pointer", background: c.bg, color: c.fg, border: `1px solid ${c.bd}`, fontFamily: "Archivo,sans-serif" }}>{c.label}</button>
 
     ))}
         </div>
       </div>
+
+      {addSeasonToCalendar && (
+        <div style={{ display: "flex" }}>
+          <button
+            onClick={addSeasonToCalendar}
+            data-toast="Calendar file downloaded — 30 min reminder on every fixture"
+            data-toast-tone="gold"
+            data-m="tap"
+            data-hov="btn"
+            style={{ border: "1px solid var(--line)", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "12px", fontWeight: "700", letterSpacing: ".03em", height: "38px", padding: "0 16px", borderRadius: "8px", background: "var(--panel)", color: "var(--ink)" }}
+          >
+            {seasonCalendarLabel}
+          </button>
+        </div>
+      )}
 
       {!months && <Missing />}
       {(months || []).map((mo, moI) => (

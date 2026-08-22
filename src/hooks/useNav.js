@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 const INITIAL = {
   comp: 'PL',
+  // Which competition the fixture list is filtered to. 'ALL' shows everything.
+  fixtureComp: 'ALL',
   page: 'Overview',
   player: 'Erling Haaland',
   club: 'Arsenal',
@@ -96,5 +98,9 @@ export function useNav() {
 
   const setComp = useCallback((comp) => setState((s) => ({ ...s, comp })), []);
 
-  return { state, nav: { go, openClub, openPlayer, goBack, setComp } };
+  // Filtering the fixture list is not a navigation: it pushes no history entry,
+  // so back still leaves the page rather than undoing a chip.
+  const setFixtureComp = useCallback((fixtureComp) => setState((s) => ({ ...s, fixtureComp })), []);
+
+  return { state, nav: { go, openClub, openPlayer, goBack, setComp, setFixtureComp } };
 }

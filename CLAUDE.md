@@ -40,7 +40,9 @@ that is the rule working, not a regression.
 
 **Exception to watch for:** two spots are too small to hold the words "Failed to fetch" — the
 44px shirt-number square and the badge disc. Both show an em dash with an explanatory
-`data-tip` instead. That is deliberate; do not "fix" it by cramming text in.
+`data-tip` instead. That is deliberate; do not "fix" it by cramming text in. Shirt numbers
+themselves are now real (ESPN), but the em dash still shows for a player no provider matched
+— typically someone out on loan — so the path is still live.
 
 ---
 
@@ -70,8 +72,9 @@ GitHub Pages is static, so the frontend cannot hold a key. The Cloudflare Worker
 token as a secret, calls upstream, caches, and returns shapes the components render directly.
 
 ```
-mancity.alecstanley.com  ──►  mancity-hub-api  ──►  football-data.org / RSS
-(static React, no keys)       (token + cache)
+mancity.alecstanley.com  ──►  mancity-hub-api  ──►  football-data.org (token)
+(static React, no keys)       (token + cache            Fantasy PL / ESPN /
+                               + cross-provider join)   Wikidata / RSS (keyless)
 ```
 
 | path | role |
@@ -81,6 +84,8 @@ mancity.alecstanley.com  ──►  mancity-hub-api  ──►  football-data.or
 | `src/model/records.js` | table / squad / club / player transforms. Returns real data or `null` |
 | `src/lib/api.js` | Worker client, bootstrap + live polling |
 | `worker/src/providers/` | **all provider-specific code.** Swapping providers is a change here plus one import in `worker/src/index.js` |
+| `worker/src/join.js` | reconciles one player across providers. Read its header before touching squad code |
+| `worker/src/derive.js` | caches the small shapes built from a large payload. Bump `SHAPE` when a shape changes |
 | `design/` | the original Claude Design export, reference only. Nothing depends on it |
 
 ## Commands
@@ -106,18 +111,101 @@ the template in the browser. Unshippable. Converted to React + Vite (63 kB gzipp
 conversion was done by one-shot scripts that no longer exist — the port is finished, don't
 look for them.
 
-**API-Football is a dead end on the free tier.** It looks ideal (all five competitions,
-injuries, transfers, goalscorers, badges) but **its free plan cannot read the current season —
-it stops at 2024.** Verified by direct API call; the docs site is behind a bot challenge that
-blocks scraping, so this is not discoverable by reading. Its paid tier ($19/mo) would restore
-the domestic cups, injuries and transfers that currently read "Failed to fetch". The adapter
-for it is in git history (`worker/src/providers/apifootball.js`, deleted in commit `e7607d7`).
+**Four providers, layered — do not consolidate them.** football-data.org is the spine and the
+only one with a token. FPL, ESPN and Wikidata each fill something no other free source has.
+Each is optional and wrapped, so one going down costs its panels and nothing else.
 
-**TheSportsDB's free key caps every list at 5 rows** — unusable for a 20-team table.
+**Paying for a provider is no longer the way to close a gap.** The remaining "Failed to fetch"
+fields — contract, preferred foot, head-to-head, broadcaster, current manager — are the ones
+no free tier reaches, and everything else is now sourced. Before adding a paid tier, check
+whether the field is actually missing rather than assuming the old coverage table.
+
+**Sources already ruled out, with the reason. Do not re-research these:**
+
+| source | why not |
+| --- | --- |
+| API-Football free tier | cannot read the current season; stops at 2024. Verified by direct call. Adapter is in git history (`worker/src/providers/apifootball.js`, deleted in `e7607d7`) |
+| TheSportsDB free key | caps every list at 5 rows — unusable for a 20-team table |
+| SofaScore | `403 Forbidden` on every endpoint from a datacenter IP |
+| Fotmob | returns the HTML shell, not JSON |
+| Transfermarkt community APIs | the public instances are dead — `fly.dev` 500s, `vercel.app` returns `402 DEPLOYMENT_DISABLED` |
+
+**football-data.org's free tier is 12 competitions** (`TIER_ONE`). Of City's, only PL and CL
+are in it. FA Cup is `TIER_TWO`; the EFL Cup, Community Shield, Super Cup and Club World Cup
+are not sold at any tier. That is why the cups come from ESPN.
 
 ---
 
 ## Gotchas that cost time
+
+### The multi-provider layer
+
+- **Calendar export writes UTC, deliberately.** `src/lib/calendar.js` emits `DTSTART` with a
+  `Z` suffix so the event lands at the right local time — the dashboard is read in Australia
+  and the fixtures kick off in England. It is also a CRLF format with a 75-octet line limit;
+  both are enforced there, and clients reject files that ignore them.
+- **Any name that crosses providers must be resolved before it becomes a link.** The
+  treatment room linked FPL's "Jérémy Doku" at a squad keyed on football-data's "Jeremy Doku",
+  so the link opened an empty profile — one accent's difference. `attachSquadNames` renames
+  each injury to the squad's spelling by DOB; `markLinkable` flags scorers who have since left
+  and therefore have no page. Anything that cannot be resolved renders as plain text rather
+  than a link to nothing. **Adding a link keyed on a name? Resolve it first.**
+- **Join players on date of birth, never on name.** Measured on City's squad: DOB matched 25
+  of 26, a normalised-surname match only 22. It fails on players filed under a full legal
+  name — `de Oliveira Nunes dos Reis` is Vitor Reis, `Moreira de Oliveira` is Savinho,
+  `González Iglesias` is Nico González. `worker/src/join.js` does DOB first, unique surname
+  second, nothing third.
+- **football-data.org's squad keeps departed players.** It still listed Rodri, Reijnders and
+  Phillips weeks after they left. The squad drops anyone FPL reports as gone, or the squad
+  page contradicts the transfer desk beside it.
+- **ESPN needs a User-Agent from its allowlist.** It answers `curl/*`, `okhttp/*`,
+  `Go-http-client/*` and `python-requests/*` with 200, and answers a *browser* string, an
+  application name like `CityHub/1.0`, or no agent at all with **403**. Counter-intuitive but
+  verified from a Cloudflare colo, so it is the agent and not the address. FPL and Wikidata
+  both accept an honest `CityHub/1.0` agent.
+- **ESPN standings live on a different host.** `site.web.api.espn.com/apis/v2/...` returns
+  them; `site.api.espn.com` returns `{}` for the same path.
+- **ESPN's `coach` array is historical, not current.** For City it ends at Roberto Mancini.
+  Never read a manager from it. No free source has the current one, so that field is honestly
+  unavailable.
+- **ESPN's Champions League lags a season.** `uefa.champions` still points at 2025 until the
+  league phase is drawn, which is why football-data.org remains the UCL source.
+- **Read match state from `status.type.completed` and `.state`, not from status names.** A cup
+  adds names a league never uses — `STATUS_FINAL_PEN` covered nine of the first fifty-two EFL
+  Cup ties, and extra time adds more.
+- **Bump `SHAPE` in `worker/src/derive.js` whenever a derived shape changes.** The derived
+  cache is keyed by name, so without it a deploy that adds a field serves the old shape until
+  the TTL expires. That cost an hour once already: newly added per-club summaries came back
+  empty and looked like a join bug.
+- **Wikidata: constrain stadium lookups to the UK (`wdt:P17 wd:Q145`).** Matching
+  `skos:altLabel` is what finds grounds filed under an alias, but unconstrained it also
+  matches Melbourne's Etihad Stadium and returns two capacities for City. And never select
+  clubs by league membership (`wdt:P118`) — it returns clubs and grounds seasons out of date.
+- **Both football providers are stale on grounds.** football-data.org still has Everton at
+  Goodison Park and Brentford at Griffin Park. ESPN has the current ones, so ESPN's
+  club-to-ground map wins; it also raises the Wikidata capacity hit rate to 20 of 20.
+- **A per-90 rate with zero minutes is not zero.** FPL returns `0` for a player who has not
+  played; the adapter nulls it, so the panel reports having nothing rather than showing a
+  measurement of no threat. Counting stats are gated the same way.
+- **A Premier League headshot dropped into a small box looks like a bug.** They are 500x500
+  with the player small in frame, so at 44px the face is a few pixels and the avatar reads as
+  empty even though the image loaded fine. `Portrait` takes a `zoom` prop for this; the squad
+  avatars use 1.6 with `transform-origin: center 34%`. Before assuming a portrait failed to
+  load, check `naturalWidth` — it was 500 the whole time.
+- **Player portraits need two sources and a client-side fallback.** The Premier League's CDN
+  answers **403**, not 404, for players it has no photo of (Rulli, Donnarumma), and ESPN has
+  no headshot for others (Bettinelli). Only one City player has both. A CSS `background-image`
+  cannot detect either failure and renders a blank card, so `components/Portrait.jsx` uses an
+  `<img>` with `onError` and falls through PL → ESPN → striped placeholder.
+- **`fpl.isError` must accept two payload shapes.** The bootstrap has `elements`, but
+  `/element-summary` has `history`. Checking only for `elements` marks every player-form
+  response as an upstream failure, which silently empties the last-five card.
+- **`element-summary` names the opponent by numeric team id.** Resolving it needs the
+  bootstrap's team list, which is why `/api/player` reads the same cached `leagueData` the
+  bootstrap does rather than re-fetching 1.5 MB.
+
+### Older
+
 
 - **football-data.org calls City "Man City".** `shortName()` in the provider special-cases
   team id 65 to return `'Manchester City'`, because `plFull()` matches the City row by name.
@@ -139,14 +227,31 @@ for it is in git history (`worker/src/providers/apifootball.js`, deleted in comm
 
 ## Credentials
 
-`~/.cf-token` has been **deleted**. For Worker deploys or secret rotation use
-`npx wrangler login` (browser OAuth). The football-data token lives only as a Worker secret
-and in the gitignored `worker/.dev.vars`; it is not in the repo or the bundle.
+`~/.cf-token` holds a read/write Cloudflare API token; export it as `CLOUDFLARE_API_TOKEN`
+for `wrangler`, or use `npx wrangler login` instead. The football-data token lives only as a
+Worker secret and in the gitignored `worker/.dev.vars`; it is not in the repo or the bundle.
+The other three providers need no credential at all.
 
 ---
 
 ## Current state
 
-Everything in the original brief is done and deployed. The Premier League season is one match
-old, so most of the table reads 0 and City's form strip is empty — that is real data, not a
-bug. The Champions League tab appears automatically once City have a fixture in it.
+Everything in the original brief is done, plus the four-provider layer that closed most of the
+"Failed to fetch" panels (injuries, transfers, shirt numbers, cups, capacity, xG, rival squads).
+
+The 2026/27 season is one match old, so a lot of real data is legitimately zero or empty:
+
+- most of the table reads 0, and City's form strip is empty
+- Top Scorers reports nothing, because nobody has scored yet
+- player xG panels report nothing, because a per-90 with no minutes is not a rate
+- the EFL Cup tab is absent — City enter in the third round, which is not drawn yet
+- the Champions League tab appears once the league phase is drawn
+
+None of that is a regression. Check the season is actually under way before debugging an
+empty panel.
+
+**Empty and broken are now distinguished.** `Missing` takes a `label` and `note`, and the
+model supplies an `*Empty` / `emptyState` object wherever it can prove the fetch succeeded and
+there is simply nothing yet — `scorersEmpty`, `player.emptyState`, `setPiecesEmpty`,
+`newsEmpty`, `club.formEmpty`, `club.topEmpty`. Only a real failure says "Failed to fetch".
+When adding a panel, decide which of the two it can be and wire the empty case too.

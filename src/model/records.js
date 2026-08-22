@@ -80,6 +80,8 @@ export function relatedPlayers(name, dark, nav, groups) {
     num: p.num,
     name: p.name,
     nation: p.nation,
+    photo: p.photo || null,
+    altPhoto: p.altPhoto || null,
     goals: p.goals + (p.goals === 1 ? ' goal' : ' goals'),
     open: () => nav.openPlayer(p.name),
   }));
@@ -133,7 +135,7 @@ export function seasonData(dark, timeline, nav) {
  * comes back null.
  */
 export function clubRecord(rawName, dark, ctx) {
-  const { nav, table, detail, cityRecent } = ctx;
+  const { nav, table, detail, cityRecent, venues, capacities, squadFacts, injuries, clubs } = ctx;
   const name = table?.find((r) => r.club === rawName) ? rawName : CLUB_ALIAS[rawName] || rawName;
   const row = table?.find((r) => r.club === name) || null;
   const isCity = name === 'Manchester City';
@@ -166,6 +168,12 @@ export function clubRecord(rawName, dark, ctx) {
         }))
       : null;
 
+  // The ground the club plays at now. ESPN's map is preferred over the club
+  // detail because football-data.org is stale here -- it still has Everton at
+  // Goodison Park and Brentford at Griffin Park.
+  const stadium = venues?.[name] || detail?.venue || null;
+  const capacity = stadium && capacities?.[stadium] ? capacities[stadium].toLocaleString('en-GB') : null;
+
   return {
     name,
     code: detail?.code || row?.code || null,
@@ -175,9 +183,8 @@ export function clubRecord(rawName, dark, ctx) {
     isCity,
     // Identity fields come only from a club-detail fetch.
     nick: detail?.clubColors || null,
-    stadium: detail?.venue || null,
-    capacity: null,
-    manager: detail?.coach || null,
+    stadium,
+    capacity,
     founded: detail?.founded || null,
     website: detail?.website || null,
     headline: row
@@ -196,14 +203,37 @@ export function clubRecord(rawName, dark, ctx) {
         ]
       : null,
     form: row && row.form.length ? row.form : null,
+    // A club with no form string has played too few league games to have one,
+    // which the standings row proves rather than a failed request.
+    formEmpty: row && !row.form.length
+      ? { label: 'No form yet', note: played ? 'Too few league matches played to show a form guide.' : 'No league matches played yet this season.' }
+      : null,
+    topEmpty: isCity && ctx.top && !ctx.top.length
+      ? { label: 'No goals yet', note: 'Nobody has scored for City in the Premier League this season.' }
+      : null,
     recent,
-    // Not available from this provider.
-    squadFacts: null,
-    h2h: null,
-    absences: null,
+    // City's card is counted off the merged squad, which knows about the
+    // players the other providers add; every rival's comes from the league-wide
+    // availability feed. Both are real counts, from the best source each has.
+    squadFacts: isCity ? squadFacts || null : clubs?.[name]?.facts || null,
+    absences: isCity ? absenceRows(injuries) : clubs?.[name]?.absences || null,
     top: isCity ? ctx.top || null : null,
+    hasTop: isCity,
+    // Every club has an absence list now, not just City.
+    hasAbsences: true,
     cityInjuries: isCity,
   };
+}
+
+/**
+ * The club page's absence list. Same source as the treatment room, shaped for
+ * the narrower card: the player, the Premier League's description of the
+ * problem, and its return note where the note carries one.
+ */
+function absenceRows(injuries) {
+  if (!injuries) return null;
+  if (!injuries.length) return [];
+  return injuries.map((i) => ({ role: i.name, issue: i.issue, back: i.back }));
 }
 
 // ---------------------------------------------------------------------------
@@ -251,22 +281,161 @@ export function playerRecord(name, dark, ctx) {
     status: rec.status,
     statusFg: rec.statusFg,
     statusBg: rec.statusBg,
+    photo: rec.photo || null,
+    altPhoto: rec.altPhoto || null,
     headline: [
       { label: 'APPEARANCES', value: rec.apps, sub: 'Premier League' },
       { label: 'GOALS', value: rec.goals, sub: rec.goals ? 'this season' : 'no goals this season' },
       { label: 'ASSISTS', value: rec.assists, sub: rec.assists ? 'this season' : 'no assists this season' },
-      { label: 'MINUTES', value: null, sub: null },
+      {
+        label: 'MINUTES',
+        value: rec.minutes,
+        sub: rec.starts != null ? `${rec.starts} ${rec.starts === 1 ? 'start' : 'starts'}` : null,
+      },
     ],
-    // Per-90 metrics, per-competition splits, contract, height and preferred
-    // foot all need a provider tier this project does not have.
-    metrics: null,
-    comps: null,
-    form: null,
-    contract: null,
-    foot: null,
-    height: null,
-    joined: null,
+    metrics: metricRows(rec),
+    // A panel with nothing in it is not the same as a panel that failed. When
+    // the feed reached this player and simply has no minutes behind it yet, say
+    // that instead of reporting a fetch that did not fail.
+    emptyState:
+      rec.minutes === 0
+        ? { label: 'No data yet', note: `${rec.name} has not played a Premier League match this season.` }
+        : null,
+    height: rec.height || null,
+    weight: rec.weight || null,
+    joined: joinedLabel(rec.joined),
+    setPieces: setPieceRows(rec),
+    // A goalkeeper taking no set pieces is a fact about the player, not a
+    // failed request. Only say "failed" when the feed never reached him.
+    setPiecesEmpty:
+      rec.fplId && !setPieceRows(rec)
+        ? { label: 'No set-piece duty', note: `${rec.name} is not listed for penalties, free kicks or corners.` }
+        : null,
+    involvement: involvementRows(rec),
+    fplId: rec.fplId || null,
+    // Filled by /api/player once the page opens; see ctx.form.
+    form: formRows(ctx.form, dark, nav),
     news: playerNews && playerNews.length ? playerNews : null,
+    // The feed was read; it simply carries nothing about this player. Saying
+    // "failed to fetch" under a header already reading "NO STORIES" would have
+    // the panel contradict itself.
+    newsEmpty: news && (!playerNews || !playerNews.length)
+      ? { label: 'No stories', note: `Nothing in today's BBC Sport or Guardian feed mentions ${rec.name}.` }
+      : null,
     related: relatedPlayers(name, dark, nav, squadGroups),
   };
+}
+
+/**
+ * Set-piece duty, as an order within the squad where 1 is first choice.
+ *
+ * Worth its own card because it is one of the few things about a player that is
+ * known before a ball is kicked — unlike every counting stat, it says something
+ * real in the first week of a season.
+ */
+function setPieceRows(rec) {
+  const rows = [
+    { label: 'Penalties', order: rec.pens },
+    { label: 'Direct free kicks', order: rec.freeKicks },
+    { label: 'Corners', order: rec.corners },
+  ].filter((r) => typeof r.order === 'number' && r.order > 0);
+
+  if (!rows.length) return null;
+  return rows.map((r) => ({
+    label: r.label,
+    value: ordinalShort(r.order),
+    note: r.order === 1 ? 'first choice' : `${ordinalShort(r.order)} in the queue`,
+  }));
+}
+
+/**
+ * Involvement and discipline, counted over matches actually played.
+ *
+ * Gated on minutes for the same reason the per-90 metrics are: before a player
+ * has taken the field, "0 tackles" is an absence of measurement dressed up as
+ * a measurement.
+ */
+function involvementRows(rec) {
+  if (!rec.minutes) return null;
+  const keeper = typeof rec.saves === 'number' && rec.saves > 0;
+  const rows = keeper
+    ? [
+        { label: 'Saves', value: rec.saves },
+        { label: 'Clean sheets', value: rec.cleanSheets },
+        { label: 'Goals conceded', value: rec.goalsConceded },
+      ]
+    : [
+        { label: 'Tackles', value: rec.tackles },
+        { label: 'Clearances, blocks, interceptions', value: rec.cbi },
+        { label: 'Recoveries', value: rec.recoveries },
+      ];
+  rows.push({ label: 'Yellow cards', value: rec.yellows }, { label: 'Red cards', value: rec.reds });
+
+  const kept = rows.filter((r) => typeof r.value === 'number');
+  return kept.length ? kept : null;
+}
+
+/** One player's last five matches, from /api/player. */
+function formRows(form, dark, nav) {
+  if (!form || !form.length) return null;
+  const tone = toneFor(dark);
+  return form.map((g) => {
+    const [a, b] = String(g.score).split('–').map((n) => parseInt(n, 10));
+    const t = Number.isFinite(a) && Number.isFinite(b) ? (a > b ? 'W' : a < b ? 'L' : 'D') : null;
+    const bits = [];
+    if (g.goals) bits.push(`${g.goals} ${g.goals === 1 ? 'goal' : 'goals'}`);
+    if (g.assists) bits.push(`${g.assists} ${g.assists === 1 ? 'assist' : 'assists'}`);
+    bits.push(`${g.minutes} min`);
+    return {
+      code: g.code || (g.opponent ? g.opponent.slice(0, 3).toUpperCase() : '—'),
+      venue: g.home ? 'H' : 'A',
+      venueTip: g.home ? 'Home fixture' : 'Away fixture',
+      score: g.score,
+      note: bits.join(' · '),
+      fg: t ? tone[t] : 'var(--ink)',
+      open: g.opponent ? () => nav.openClub(g.opponent) : () => {},
+    };
+  });
+}
+
+const ordinalShort = (n) => {
+  const s = ['th', 'st', 'nd', 'rd'];
+  const v = n % 100;
+  return n + (s[(v - 20) % 10] || s[v] || s[0]);
+};
+
+/**
+ * The underlying numbers panel.
+ *
+ * Expected goals and assists, as published by the Premier League. The bar is
+ * scaled against a fixed reference of one per 90 rather than against the squad,
+ * so the same player reads the same way whoever else is on the page.
+ *
+ * Returns null until the player has minutes: a per-90 rate with no minutes
+ * behind it is not a measurement of zero, it is an absence of measurement.
+ */
+function metricRows(rec) {
+  if (!rec.minutes) return null;
+
+  const rows = [
+    { label: 'Expected goals per 90', value: rec.xg90, total: rec.xg, of: 'xG' },
+    { label: 'Expected assists per 90', value: rec.xa90, total: rec.xa, of: 'xA' },
+  ].filter((r) => typeof r.value === 'number');
+
+  if (!rows.length) return null;
+
+  return rows.map((r) => ({
+    label: r.label,
+    value: r.value.toFixed(2),
+    bar: Math.min(100, Math.round(r.value * 100)) + '%',
+    of: typeof r.total === 'number' ? `${r.total.toFixed(2)} ${r.of} across ${rec.minutes} minutes` : null,
+  }));
+}
+
+/** "Joined Jul 2022" from the Premier League's join date. */
+function joinedLabel(iso) {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return `Joined ${d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric', timeZone: 'UTC' })}`;
 }

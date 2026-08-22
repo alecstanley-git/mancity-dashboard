@@ -2,7 +2,7 @@ import Missing, { orMissing } from '../components/Missing.jsx';
 import Badge from '../components/Badge.jsx';
 
 export default function Overview(v) {
-  const { ui, cd, next, comp, tabs, news, fixtures, transfers, scorers, injuries, injuryCount, page, club, player } = v;
+  const { ui, cd, next, comp, tabs, news, fixtures, transfers, transferMeta, scorers, scorersEmpty, injuries, injuryCount, report, page, club, player } = v;
   return (
     <main data-m="grid" style={{ maxWidth: "1440px", margin: "0 auto", padding: "0 32px", display: "grid", gridTemplateColumns: "repeat(12,1fr)", gap: "20px", alignItems: "start" }}>
 
@@ -33,8 +33,7 @@ export default function Overview(v) {
               <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".16em", color: "var(--heroDim)" }}>KICKOFF · AEST</span>
               <span data-m="kick" style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "44px", fontWeight: "700", lineHeight: ".9", letterSpacing: ".01em" }}>{orMissing(next.kickTime)}</span>
               <span style={{ fontSize: "13px", fontWeight: "600", color: "var(--heroDim)" }}>{orMissing(next.kickDate)}</span>
-              <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--heroDim)" }}>{orMissing(next.venue)}{next.broadcast ? ` · ${next.broadcast}` : null}</span>
-              {!next.broadcast && <span style={{ fontSize: "11px", fontWeight: "600", color: "var(--heroDim)", opacity: .8 }}>Broadcaster: <Missing variant="inline" /></span>}
+              <span style={{ fontSize: "12px", fontWeight: "600", color: "var(--heroDim)" }}>{orMissing(next.venue)}</span>
             </div>
           </div>
 
@@ -61,7 +60,7 @@ export default function Overview(v) {
               </div>
             </div>
             <div data-m="cd-act" style={{ marginLeft: "auto", display: "flex", gap: "10px" }}>
-              <button data-toast="Added to calendar — reminder 30 min before kickoff" data-toast-tone="gold" style={{ border: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "12.5px", fontWeight: "700", letterSpacing: ".04em", height: "44px", padding: "0 20px", borderRadius: "8px", background: "var(--sky)", color: "#0E1A38" }} data-hov="btn">Add to calendar</button>
+              {next.addToCalendar && (<button onClick={next.addToCalendar} data-toast="Calendar file downloaded — reminder 30 min before kickoff" data-toast-tone="gold" style={{ border: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "12.5px", fontWeight: "700", letterSpacing: ".04em", height: "44px", padding: "0 20px", borderRadius: "8px", background: "var(--sky)", color: "#0E1A38" }} data-hov="btn">Add to calendar</button>)}
             </div>
           </div>
         </div>
@@ -156,7 +155,7 @@ export default function Overview(v) {
             <span data-toast="Loading every result from this season" style={{ fontSize: "11px", fontWeight: "700", color: "var(--skyText)", cursor: "pointer" }}>All results →</span>
           </div>
           <div data-m="five" style={{ display: "grid", gridTemplateColumns: "repeat(5,minmax(0,1fr))", gap: "10px" }}>
-            {!comp.recent && <Missing />}
+            {!comp.recent && <Missing {...(comp.recentEmpty || {})} />}
             {(comp.recent || []).map((g, gI) => (
               <div key={gI} data-row style={{ minWidth: "0", padding: "12px", borderRadius: "10px", background: "var(--panel2)", border: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: "8px" }}>
                 <span style={{ fontSize: "10px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{g.date} · {g.venue}</span>
@@ -176,7 +175,7 @@ export default function Overview(v) {
             <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>ALL COMPS</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-            {!scorers && <Missing />}
+            {!scorers && <Missing {...(scorersEmpty || {})} />}
             {(scorers || []).map((p, pI) => (
               <div key={pI} style={{ display: "flex", alignItems: "center", gap: "14px" }}>
                 <div style={{ width: "34px", height: "34px", borderRadius: "50%", background: "var(--chip)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none" }}>
@@ -184,7 +183,7 @@ export default function Overview(v) {
                 </div>
                 <div style={{ flex: "1", display: "flex", flexDirection: "column", gap: "6px", minWidth: "0" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <button onClick={p.open} data-tip="Open player page" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)", textAlign: "left" }}>{p.name}</button>
+                    {p.linkable ? (<button onClick={p.open} data-tip="Open player page" data-hov="link" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)", textAlign: "left" }}>{p.name}</button>) : (<span style={{ fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)" }}>{p.name}</span>)}
                     <span style={{ fontSize: "11px", fontWeight: "600", color: "var(--dim)" }}>{p.pos}</span>
                     <span style={{ marginLeft: "auto", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "20px", fontWeight: "700", color: "var(--skyText)" }}>{p.goals}</span>
                   </div>
@@ -200,6 +199,60 @@ export default function Overview(v) {
 
         <div style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "24px" }} data-m="card">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
+            <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>LAST MATCH</span>
+            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{report ? report.score : ""}</span>
+          </div>
+          {!report && <Missing />}
+          {report && (
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              <div style={{ display: "flex", alignItems: "baseline", gap: "8px", flexWrap: "wrap" }}>
+                <button onClick={report.openOpp} data-tip="Open club page" data-hov="link" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", color: "inherit", fontSize: "14px", fontWeight: "700" }}>{report.heading}</button>
+                <span style={{ fontSize: "11.5px", fontWeight: "600", color: "var(--dim)" }}>{report.venue}</span>
+              </div>
+
+              <div style={{ display: "flex", gap: "22px", flexWrap: "wrap" }}>
+                {report.attendance && (
+                  <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "24px", fontWeight: "700", lineHeight: "1" }}>{report.attendance}</span>
+                    <span style={{ fontSize: "10px", fontWeight: "800", letterSpacing: ".12em", color: "var(--dim)" }}>ATTENDANCE</span>
+                  </span>
+                )}
+                {report.referee && (
+                  <span style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
+                    <span style={{ fontSize: "14px", fontWeight: "700", lineHeight: "1.6" }}>{report.referee}</span>
+                    <span style={{ fontSize: "10px", fontWeight: "800", letterSpacing: ".12em", color: "var(--dim)" }}>REFEREE</span>
+                  </span>
+                )}
+              </div>
+
+              {report.compare && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "7px", paddingTop: "14px", borderTop: "1px solid var(--line)" }}>
+                  {report.compare.map((c, i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "48px minmax(0,1fr) 48px", gap: "10px", alignItems: "center" }}>
+                      <span style={{ fontFamily: "'Barlow Condensed',sans-serif", fontSize: "17px", fontWeight: "700", color: "var(--skyText)" }}>{c.mine}</span>
+                      <span style={{ textAlign: "center", fontSize: "11px", fontWeight: "700", letterSpacing: ".08em", color: "var(--dim)" }}>{c.label}</span>
+                      <span style={{ textAlign: "right", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "17px", fontWeight: "700" }}>{c.opp}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {report.events && report.events.length > 0 && (
+                <div style={{ display: "flex", flexDirection: "column", gap: "5px", paddingTop: "14px", borderTop: "1px solid var(--line)" }}>
+                  {report.events.map((e, i) => (
+                    <div key={i} style={{ display: "grid", gridTemplateColumns: "40px 1fr", gap: "10px", alignItems: "baseline" }}>
+                      <span style={{ fontFamily: "ui-monospace,SFMono-Regular,Menlo,monospace", fontSize: "11px", color: "var(--dim)" }}>{e.minute}</span>
+                      <span style={{ fontSize: "12.5px", fontWeight: e.forUs ? 700 : 600, color: e.fg }}>{e.label} · {e.player}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+
+        <div style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "24px" }} data-m="card">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
             <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>TREATMENT ROOM</span>
             <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{orMissing(injuryCount)}</span>
           </div>
@@ -209,7 +262,7 @@ export default function Overview(v) {
               <div key={iI} data-row data-tip="Latest club fitness update" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--panel2)" }}>
                 <span style={{ width: "6px", height: "26px", borderRadius: "3px", background: i.tone, flex: "none" }}></span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "2px" }}>
-                  <button onClick={i.open} style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)", textAlign: "left" }}>{i.name}</button>
+                  {i.linkable ? (<button onClick={i.open} data-tip="Open player page" data-hov="link" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)", textAlign: "left" }}>{i.name}</button>) : (<span style={{ fontFamily: "Archivo,sans-serif", fontSize: "13.5px", fontWeight: "700", color: "var(--ink)" }}>{i.name}</span>)}
                   <span style={{ fontSize: "11.5px", fontWeight: "600", color: "var(--dim)" }}>{i.issue}</span>
                 </div>
                 <span style={{ marginLeft: "auto", fontSize: "11.5px", fontWeight: "700", letterSpacing: ".05em", color: i.tone }}>{i.back}</span>
@@ -222,7 +275,7 @@ export default function Overview(v) {
         <div style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "24px" }} data-m="card">
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
             <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>TRANSFER DESK</span>
-            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>JAN WINDOW</span>
+            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>{orMissing(transferMeta)}</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
             {!transfers && <Missing />}

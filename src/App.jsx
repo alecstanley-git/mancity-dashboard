@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { buildModel } from './model/index.js';
 import { useNav } from './hooks/useNav.js';
 import { useOverlays } from './hooks/useOverlays.js';
-import { useFeed, useClubDetail } from './lib/api.js';
+import { useFeed, useClubDetail, usePlayerForm } from './lib/api.js';
 
 import LiveBar from './components/LiveBar.jsx';
 import IdleBar from './components/IdleBar.jsx';
@@ -34,6 +34,14 @@ export default function App() {
   const { state, nav } = useNav();
   const { feed, status, error, refresh } = useFeed();
   const clubDetail = useClubDetail(state.club, feed && feed.teamIds, state.page === 'Club');
+  // The Fantasy id is carried on the squad record, so the player page can ask
+  // for that player's match-by-match season without a second lookup table.
+  const fplId = useMemo(() => {
+    if (!feed || !feed.squad) return null;
+    for (const g of feed.squad) for (const p of g.players) if (p.name === state.player) return p.fplId || null;
+    return null;
+  }, [feed, state.player]);
+  const playerForm = usePlayerForm(fplId, state.page === 'Player');
   useOverlays(theme);
 
   // One tick a second, for the countdown only.
@@ -50,10 +58,10 @@ export default function App() {
         supporterName: SUPPORTER,
         now,
         state,
-        feed: { ...(feed || {}), clubDetail },
+        feed: { ...(feed || {}), clubDetail, playerForm },
         nav: { ...nav, setTheme },
       }),
-    [theme, now, state, feed, clubDetail, nav, setTheme]
+    [theme, now, state, feed, clubDetail, playerForm, nav, setTheme]
   );
 
   return (

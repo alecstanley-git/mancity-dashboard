@@ -30,10 +30,6 @@ export default function Club(v) {
             <span style={{ fontSize: "13px", fontWeight: "600" }}>{orMissing(club.capacity)}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-            <span style={{ fontSize: "10.5px", fontWeight: "700", letterSpacing: ".12em", color: "var(--dim)", width: "96px", flex: "none" }}>MANAGER</span>
-            <span style={{ fontSize: "13px", fontWeight: "600" }}>{orMissing(club.manager)}</span>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
             <span style={{ fontSize: "10.5px", fontWeight: "700", letterSpacing: ".12em", color: "var(--dim)", width: "96px", flex: "none" }}>FOUNDED</span>
             <span style={{ fontSize: "13px", fontWeight: "600" }}>{orMissing(club.founded)}</span>
           </div>
@@ -41,7 +37,7 @@ export default function Club(v) {
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", paddingTop: "18px", borderTop: "1px solid var(--line)" }}>
           <span style={{ fontSize: "10.5px", fontWeight: "700", letterSpacing: ".12em", color: "var(--dim)" }}>LEAGUE FORM</span>
           <span style={{ display: "flex", gap: "6px" }}>
-            {!club.form && <Missing />}
+            {!club.form && <Missing {...(club.formEmpty || {})} />}
             {(club.form || []).map((d, dI) => (
               <span key={dI} data-tip={d.tip} style={{ width: "26px", height: "26px", borderRadius: "6px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "11px", fontWeight: "800", lineHeight: "1", background: d.bg, color: d.fg }}>{d.ch}</span>
 
@@ -71,28 +67,6 @@ export default function Club(v) {
           </div>
         </div>
 
-      {(club.showH2H) && (
-          <div style={{ background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "24px" }} data-m="card">
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", minHeight: "26px", marginBottom: "18px" }}>
-            <span style={{ fontSize: "13px", fontWeight: "800", letterSpacing: ".06em" }}>AGAINST CITY</span>
-            <span style={{ fontSize: "11px", fontWeight: "700", letterSpacing: ".1em", color: "var(--dim)" }}>LAST FOUR</span>
-          </div>
-          <div style={{ padding: "16px", borderRadius: "10px", background: "var(--panel2)", border: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: "6px", marginBottom: "16px" }}>
-            <span style={{ fontSize: "10.5px", fontWeight: "800", letterSpacing: ".12em", color: "var(--skyText)" }}>NEXT MEETING</span>
-            <span style={{ fontSize: "13px", fontWeight: "600", lineHeight: "1.4", textWrap: "pretty" }}>{orMissing(club.h2h.next)}</span>
-          </div>
-          {!club.h2h.rows && <Missing />}
-          {(club.h2h.rows || []).map((h, hI) => (
-            <div key={hI} data-row style={{ display: "grid", gridTemplateColumns: "90px 30px minmax(0,1fr)", gap: "12px", alignItems: "center", padding: "12px 10px", margin: "0 -10px", borderRadius: "8px" }}>
-              <span style={{ fontSize: "11px", fontWeight: "800", letterSpacing: ".1em", color: "var(--dim)" }}>{h.date}</span>
-              <span style={{ fontSize: "11px", fontWeight: "800", letterSpacing: ".1em", color: "var(--dim)" }}>{h.venue}</span>
-              <span style={{ textAlign: "right", fontSize: "13px", fontWeight: "700", color: h.fg }}>{h.score}</span>
-            </div>
-
-    ))}
-          </div>
-
-    )}
       </section>
 
       <section data-m="col-main" style={{ gridColumn: "span 7", containerType: "inline-size", display: "flex", flexDirection: "column", gap: "20px" }}>
@@ -143,11 +117,11 @@ export default function Club(v) {
         {(club.hasTop) && (
           <div style={{ marginTop: "20px", paddingTop: "18px", borderTop: "1px solid var(--line)", display: "flex", flexDirection: "column", gap: "4px" }}>
             <span style={{ fontSize: "10.5px", fontWeight: "800", letterSpacing: ".14em", color: "var(--dim)", marginBottom: "8px" }}>TOP CONTRIBUTORS</span>
-            {!club.top && <Missing />}
+            {!club.top && <Missing {...(club.topEmpty || {})} />}
             {(club.top || []).map((p, pI) => (
               <div key={pI} data-row style={{ display: "flex", alignItems: "center", gap: "14px", padding: "11px 10px", margin: "0 -10px", borderRadius: "8px" }}>
                 <span style={{ width: "32px", height: "32px", borderRadius: "9px", flex: "none", display: "flex", alignItems: "center", justifyContent: "center", background: "var(--chip)", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "15px", fontWeight: "700", color: "var(--skyText)" }}>{p.num}</span>
-                <button onClick={p.open} data-tip="Open player page" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", color: "inherit", textAlign: "left", fontSize: "13.5px", fontWeight: "700" }} data-hov="link">{p.name}</button>
+                {p.linkable ? (<button onClick={p.open} data-tip="Open player page" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", color: "inherit", textAlign: "left", fontSize: "13.5px", fontWeight: "700" }} data-hov="link">{p.name}</button>) : (<span style={{ fontFamily: "Archivo,sans-serif", color: "inherit", fontSize: "13.5px", fontWeight: "700" }}>{p.name}</span>)}
                 <span style={{ marginLeft: "auto", fontSize: "12px", fontWeight: "600", color: "var(--dim)" }}>{p.goals}</span>
               </div>
 
@@ -160,7 +134,7 @@ export default function Club(v) {
             <span style={{ fontSize: "10.5px", fontWeight: "800", letterSpacing: ".14em", color: "var(--dim)", marginBottom: "2px" }}>REPORTED ABSENCES</span>
             {!club.absences && <Missing />}
             {(club.absences || []).map((a, aI) => (
-              <div key={aI} data-row data-tip="Sample data — feeds wired later" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--panel2)" }}>
+              <div key={aI} data-row data-tip="Latest club fitness update" style={{ display: "flex", alignItems: "center", gap: "12px", padding: "12px 14px", borderRadius: "10px", background: "var(--panel2)" }}>
                 <span style={{ width: "6px", height: "26px", borderRadius: "3px", background: a.tone, flex: "none" }}></span>
                 <span style={{ display: "flex", flexDirection: "column", gap: "2px", minWidth: "0" }}>
                   <span style={{ fontSize: "13.5px", fontWeight: "700" }}>{a.role}</span>

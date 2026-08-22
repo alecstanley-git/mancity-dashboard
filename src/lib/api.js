@@ -147,3 +147,36 @@ export function useClubDetail(clubName, teamIds, active) {
 
   return detail;
 }
+
+/**
+ * One player's match-by-match season, fetched only while a player page is open.
+ *
+ * Same reasoning as `useClubDetail`: the Worker needs one upstream call per
+ * player, so paying for it in the bootstrap would mean thirty calls to render
+ * a page that shows one.
+ */
+export function usePlayerForm(fplId, active) {
+  const [form, setForm] = useState(null);
+
+  useEffect(() => {
+    if (!active || !fplId) {
+      setForm(null);
+      return undefined;
+    }
+    const ac = new AbortController();
+    let cancelled = false;
+    get(`/api/player?id=${fplId}`, ac.signal)
+      .then((data) => {
+        if (!cancelled) setForm((data && data.form) || null);
+      })
+      .catch(() => {
+        if (!cancelled) setForm(null);
+      });
+    return () => {
+      cancelled = true;
+      ac.abort();
+    };
+  }, [fplId, active]);
+
+  return form;
+}

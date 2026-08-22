@@ -1,4 +1,5 @@
 import Missing, { orMissing } from '../components/Missing.jsx';
+import Portrait from '../components/Portrait.jsx';
 export default function Squad(v) {
   const { page, club, player, squad, squadMeta } = v;
   return (
@@ -25,7 +26,8 @@ export default function Squad(v) {
             {(g.players || []).map((p, pI) => (
               <div key={pI} data-card style={{ minWidth: "0", background: "var(--panel)", border: "1px solid var(--line)", borderRadius: "16px", boxShadow: "var(--shadow)", padding: "20px", display: "flex", flexDirection: "column", gap: "16px" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: "14px", minWidth: "0" }}>
-                  <span style={{ width: "44px", height: "44px", borderRadius: "12px", background: "var(--chip)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "21px", fontWeight: "700", color: "var(--skyText)" }} data-tip="Shirt number — failed to fetch">{p.num ?? "\u2014"}</span>
+                  <span style={{ position: "relative", width: "44px", height: "44px", borderRadius: "50%", overflow: "hidden", flex: "none", background: "var(--stripeBg)", backgroundImage: "repeating-linear-gradient(135deg,var(--stripe) 0 2px,transparent 2px 10px)" }} data-tip={p.name}><Portrait src={p.photo} alt={p.altPhoto} zoom={1.6} /></span>
+                  <span style={{ width: "44px", height: "44px", borderRadius: "12px", background: "var(--chip)", display: "flex", alignItems: "center", justifyContent: "center", flex: "none", fontFamily: "'Barlow Condensed',sans-serif", fontSize: "21px", fontWeight: "700", color: "var(--skyText)" }} data-tip={p.num ? `Shirt ${p.num} · ${p.name}` : "Shirt number — failed to fetch"}>{p.num ?? "\u2014"}</span>
                   <span style={{ display: "flex", flexDirection: "column", gap: "3px", minWidth: "0" }}>
                     <button onClick={p.open} data-tip="Open player page" style={{ background: "none", border: "0", padding: "0", cursor: "pointer", fontFamily: "Archivo,sans-serif", fontSize: "15px", fontWeight: "700", color: "var(--ink)", textAlign: "left", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>{p.name}</button>
                     <span style={{ fontSize: "11px", fontWeight: "600", letterSpacing: ".08em", color: "var(--dim)" }}>{p.nation} · {p.age} YRS</span>

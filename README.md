@@ -11,9 +11,10 @@ Live at **[mancity.alecstanley.com](https://mancity.alecstanley.com)**.
   Browser                          Cloudflare Worker              Upstream
   ─────────                        ─────────────────              ────────
   mancity.alecstanley.com          mancity-hub-api                football-data.org (token)
-  GitHub Pages, static React  ───► holds the API token       ───► BBC Sport RSS     (no key)
-  no keys in the bundle            caches + rate-limits            Guardian RSS     (no key)
-                                   normalises shapes
+  GitHub Pages, static React  ───► holds the API token       ───► Fantasy PL        (no key)
+  no keys in the bundle            caches + rate-limits            ESPN              (no key)
+                                   joins + normalises shapes       Wikidata          (no key)
+                                                                   BBC / Guardian RSS (no key)
 ```
 
 - Site: <https://mancity.alecstanley.com>
@@ -50,21 +51,48 @@ The original design export shipped with authored sample data, and much of it was
 (pass accuracy was `78 + shirtNumber % 14`; squad size was `24 + clubName.length % 4`). All
 of it has been removed rather than shown as if real.
 
-What the current provider covers, on its free tier:
+### Who supplies what
 
-| Available | Shows "Failed to fetch" |
+Four providers. Only football-data.org needs a key; the other three are unauthenticated, so
+there is exactly one secret to look after.
+
+| provider | key | supplies |
+| --- | --- | --- |
+| **football-data.org** | token | the spine — PL and UCL tables, fixtures, results, squad membership, club identity |
+| **Fantasy Premier League** | none | availability and injuries, transfers, expected goals/assists, minutes, headshots — for all twenty clubs |
+| **ESPN** | none | FA Cup, EFL Cup, Community Shield, Super Cup, Club World Cup; shirt numbers, heights, current grounds |
+| **Wikidata** | none | ground capacity |
+| **BBC Sport / Guardian RSS** | none | news and thumbnails |
+
+Everything except football-data.org is optional: each is wrapped so a failure returns `null`
+and only the panels it feeds report the gap.
+
+### What is covered
+
+Everything below is fetched. Fields no free tier can supply — contract length, preferred
+foot, head-to-head records, broadcaster listings and the current manager — were removed from
+the interface rather than left reporting a failure forever.
+
+| area | what is shown |
 | --- | --- |
-| Fixtures, results, kickoff times, venues, crests | Injuries and transfers |
-| Full Premier League table, form, GD, points | Shirt numbers |
-| Champions League table, once the league phase starts | Player metrics, contract, height, foot |
-| Squad roster: names, nationalities, ages, positions | Head-to-head records |
-| Goals, assists and appearances for players who have scored | Goalscorer names during a live match |
-| Live score and match minute | FA Cup, League Cup, Club World Cup |
-| Club identity: ground, founded, colours, squad size | |
-| News and thumbnails from BBC Sport and The Guardian | |
+| Fixtures | every competition, kickoff times, venues, crests, filterable by competition |
+| Tables | full Premier League table with form; Champions League once the league phase starts |
+| Cups | FA Cup, EFL Cup, Community Shield, Super Cup, Club World Cup, as a knockout path |
+| Last match | attendance, referee, goals and cards, and both sides' possession, shots, corners and fouls |
+| Squad | shirt numbers, heights, weights, ages, nationalities, join dates, availability |
+| Treatment room | injuries and suspensions with the reason and expected return, for every club |
+| Transfer desk | moves in and out, in the Premier League's own wording |
+| Player | portrait, expected goals and assists per 90, involvement and discipline, set-piece duty, last five matches |
+| Club | ground and capacity, squad size, absences — for all twenty clubs |
+| News | BBC Sport and The Guardian |
+| Calendar | the next fixture, or a whole filtered season, as a downloadable `.ics` with a 30-minute reminder |
 
-Widening that first column is a matter of provider tier, not of code — see
-[Changing provider](#changing-provider).
+### Empty is not the same as broken
+
+A panel with nothing in it says which of the two it is. "Failed to fetch" means the request
+failed. When the request succeeded and there is genuinely nothing yet — a player with no
+minutes, a squad with no goals, a goalkeeper with no set-piece duty — the panel says that
+instead, and why. Both states are honest; only one of them is a fault.
 
 ---
 
